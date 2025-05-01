@@ -1,22 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stopwatch</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stopwatch Canvas</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
 
+      canvas {
+        background-color: white;
+        border: 5px solid #000;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="stopwatchCanvas" width="700" height="400"></canvas>
+    <script>
+      const canvas = document.getElementById("stopwatchCanvas");
+      const ctx = canvas.getContext("2d");
 
-    <center>
-        <b>00:00:00</b>
-        <br>
-        <button>Mulai</button>
-        <button>Berhenti</button>
-        <button>Reset</button>
-    </center>
+      let milliseconds = 0;
+      let seconds = 0;
+      let timerInterval = null;
+      let isRunning = false;
 
+      // Formatting function
+      function formatTime() {
+        // Pad seconds to 3 digits (000, 001, ...)
+        const fmtSeconds = String(seconds).padStart(3, "0");
+        // Pad milliseconds to 2 digits (00-99, representing 100ths of a second)
+        const fmtMilliseconds = String(milliseconds).padStart(2, "0");
+        return { fmtSeconds, fmtMilliseconds };
+      }
 
-    
-</body>
+      // Drawing function
+      function drawTime() {
+        const { fmtSeconds, fmtMilliseconds } = formatTime();
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Set font properties
+        ctx.font = "50px Arial";
+        ctx.textBaseline = "middle";
+
+        // Calculate positions for centering
+        const colon = ":";
+        const totalText = fmtSeconds + colon + fmtMilliseconds;
+        const totalWidth = ctx.measureText(totalText).width;
+        const startX = (canvas.width - totalWidth) / 2;
+
+        // Draw seconds (green) - Align right relative to the colon's estimated position
+        ctx.fillStyle = "green";
+        ctx.textAlign = "right";
+        ctx.fillText(fmtSeconds, canvas.width / 2 + 12, canvas.height / 2 - 28); // Adjust offset slightly left of center
+
+        // Draw colon (black) - Center aligned
+        ctx.fillStyle = "black";
+        ctx.textAlign = "center";
+        ctx.fillText(colon, canvas.width / 2 + 20, canvas.height / 2 - 28);
+
+        // Draw milliseconds (red) - Align left relative to the colon's estimated position
+        ctx.fillStyle = "red";
+        ctx.textAlign = "left";
+        ctx.fillText(
+          fmtMilliseconds,
+          canvas.width / 2 + 28,
+          canvas.height / 2 - 28
+        );
+
+        calculateButtonPositions();
+        drawButtons();
+      }
+
+      // Define buttons globally (outside any function)
+      const buttons = [
+        {
+          id: "start",
+          text: "Start Timer",
+          color: "green",
+          x: 200,
+          y: 218,
+          width: 120,
+          height: 40,
+        },
+        {
+          id: "stop",
+          text: "Stop Timer",
+          color: "#e6e600",
+          x: 310,
+          y: 218,
+          width: 120,
+          height: 40,
+        },
+        {
+          id: "reset",
+          text: "Reset Timer",
+          color: "red",
+          x: 420,
+          y: 218,
+          width: 120,
+          height: 40,
+        },
+      ];
+
+      // Function to draw buttons
+      function drawButtons() {
+        buttons.forEach((btn) => {
+          ctx.fillStyle = btn.color;
+          ctx.fillRect(btn.x, btn.y, btn.width, btn.height);
+
+          // Button text
+          ctx.fillStyle = btn.color === "#e6e600" ? "black" : "white";
+          ctx.font = "16px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(btn.text, btn.x + btn.width / 2, btn.y + btn.height / 2);
+        });
+      }
+
+      // Add this function before drawButtons()
+      function calculateButtonPositions() {
+        const totalButtonWidth =
+          buttons.length * buttons[0].width + (buttons.length - 1) * 10;
+        const startX = (canvas.width - totalButtonWidth) / 2;
+
+        buttons.forEach((btn, index) => {
+          btn.x = startX + (btn.width + 14) * index;
+        });
+      }
+
+      // Timer update function
+      function updateTimer() {
+        milliseconds++;
+        // If milliseconds reach 100 (0-99), reset ms and increment seconds
+        if (milliseconds >= 100) {
+          milliseconds = 0;
+          seconds++;
+        }
+
+        drawTime();
+      }
+
+      // Handle canvas clicks
+      canvas.addEventListener("click", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        buttons.forEach((btn) => {
+          if (
+            x >= btn.x &&
+            x <= btn.x + btn.width &&
+            y >= btn.y &&
+            y <= btn.y + btn.height
+          ) {
+            if (btn.id === "start" && !isRunning) {
+              timerInterval = setInterval(updateTimer, 10);
+              isRunning = true;
+            } else if (btn.id === "stop" && isRunning) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+              isRunning = false;
+            } else if (btn.id === "reset") {
+              if (isRunning) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                isRunning = false;
+              }
+              milliseconds = 0;
+              seconds = 0;
+              drawTime();
+            }
+          }
+        });
+      });
+
+      // Initial draw when page loads
+      drawTime();
+    </script>
+  </body>
 </html>

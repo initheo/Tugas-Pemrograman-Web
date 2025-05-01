@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bouncing Ball Canvas</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+
+      canvas {
+        background-color: green;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="700" height="400"></canvas>
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Update the ball properties
+      let ball = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        radius: 15,
+        color: "white",
+        dx: 1, // Reduced initial speed
+        movingRight: true,
+        movingLeft: false,
+        movingUp: false, // Added new direction
+        visible: true,
+      };
+
+      function drawBall() {
+        if (!ball.visible) return; // Don't draw if invisible
+
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = ball.color;
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      function update() {
+        if (!ball.visible) return;
+
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the ball
+        drawBall();
+
+        // Update position
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Collision detection and direction change logic
+        // 1. Moving Right -> Hit Right Edge -> Move Down
+        if (ball.movingRight && ball.x + ball.radius >= canvas.width) {
+          ball.x = canvas.width - ball.radius;
+          ball.dx = 0;
+          ball.dy = 1; // Increased speed for vertical movement
+          ball.movingRight = false;
+          ball.movingDown = true;
+        }
+        // 2. Moving Down -> Hit Bottom Edge -> Move Left
+        else if (ball.movingDown && ball.y + ball.radius >= canvas.height) {
+          ball.y = canvas.height - ball.radius;
+          ball.dx = -1; // Increased speed for horizontal movement
+          ball.dy = 0;
+          ball.movingDown = false;
+          ball.movingLeft = true;
+        }
+        // 3. Moving Left -> Move past left edge -> Disappear
+        else if (ball.movingLeft && ball.x + ball.radius < 0) {
+          // Changed condition
+          ball.visible = false; // Ball disappears when completely off screen
+        }
+
+        // Request the next frame
+        if (ball.visible) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      // Initial setup: Place ball in center and start animation
+      ball.x = ball.radius;
+      ball.y = canvas.height / 2;
+      ball.dx = 1;
+      ball.dy = 0;
+      ball.movingRight = true;
+      ball.movingDown = false;
+      ball.movingLeft = false;
+      ball.visible = true;
+
+      // Start the animation loop
+      update();
+    </script>
+  </body>
+</html>
