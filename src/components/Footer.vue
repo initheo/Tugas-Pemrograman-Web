@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router';
 
 defineProps({
   msg: String,
@@ -65,39 +66,29 @@ const count = ref(0)
             </h3>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="about.html"
+                <RouterLink to="/about"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Tentang Kami</a
-                >
+                  >Tentang Kami</RouterLink>
               </li>
               <li>
-                <a
-                  href="services.html"
+                <RouterLink to="/services"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Layanan</a
-                >
+                  >Layanan</RouterLink>
               </li>
               <li>
-                <a
-                  href="pricing.html"
+                <RouterLink to="/pricing"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Harga</a
-                >
+                  >Harga</RouterLink>
               </li>
               <li>
-                <a
-                  href="contact.html"
+                <RouterLink to="/faq"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Kontak</a
-                >
+                  >Kontak</RouterLink>
               </li>
               <li>
-                <a
-                  href="faq.html"
+                <RouterLink to="/contact"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >FAQ</a
-                >
+                  >FAQ</RouterLink>
               </li>
             </ul>
           </div>
@@ -109,39 +100,34 @@ const count = ref(0)
             </h3>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="services.html#laundry"
+                <RouterLink
+                  to="/services"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Cuci & Lipat</a
-                >
+                  >Cuci & Lipat</RouterLink>
               </li>
               <li>
-                <a
-                  href="services.html#dry-cleaning"
+                  <RouterLink
+                   to="/services"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Cuci Kering</a
-                >
+                  >Cuci Kering</RouterLink>
               </li>
               <li>
-                <a
-                  href="services.html#ironing"
+                <RouterLink
+                   to="/services"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Setrika & Pres</a
-                >
+                  >Setrika & Pres</RouterLink>
               </li>
               <li>
-                <a
-                  href="services.html#household"
+                  <RouterLink
+                   to="/services"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Linen Rumah Tangga</a
-                >
+                  >Linen Rumah Tangga</RouterLink>
               </li>
               <li>
-                <a
-                  href="services.html#express"
+                  <RouterLink
+                   to="/services"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
-                  >Layanan Ekspres</a
-                >
+                  >Layanan Ekspres</RouterLink>
               </li>
             </ul>
           </div>

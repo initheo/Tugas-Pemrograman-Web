@@ -7,7 +7,6 @@ import LoginView from '../views/LoginView.vue'
 import PricingView from '../views/PricingView.vue'
 import ServicesView from '../views/ServicesView.vue'
 
-
 const routes = [
   {
     path: '/',
@@ -48,8 +47,19 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes, // Use the routes constant defined above
+  scrollBehavior(to, from, savedPosition) {
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      }
+    } else if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0 }
+    }
+  }
 })
 
 export default router
-

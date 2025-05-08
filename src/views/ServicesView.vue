@@ -561,7 +561,7 @@
     </section>
 
     <!-- CTA Section -->
-    <section
+    <section 
       className="py-20 bg-gradient-to-r from-primary-700 to-primary-900 text-white relative overflow-hidden"
     >
       <div
@@ -572,7 +572,7 @@
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Siap untuk Mencoba Layanan Kami?
           </h2>
-          <p className="text-lg mb-8 text-primary-100 max-w-2xl mx-auto">
+          <p id="ctaLayanan" className="text-lg mb-8 text-primary-100 max-w-2xl mx-auto">
             Jadwalkan penjemputan pertama Anda hari ini dan rasakan perbedaan
             layanan laundry premium LaundrEase.
           </p>
@@ -603,4 +603,39 @@
 <script setup>
 import Header from '../components/Header.vue'
 import Footer from '../components/Footer.vue'
+</script>
+
+<script>
+export default {
+  mounted() {
+    this.scrollToHash();
+  },
+  watch: {
+    '$route.hash'(newHash) {
+      if (newHash) {
+        this.scrollToHash();
+      }
+    }
+  },
+  methods: {
+    scrollToHash() {
+      const hash = this.$route.hash;
+      if (hash) {
+        const element = document.querySelector(hash);
+        if (element) { 
+          let attempts = 0;
+          const tryScroll = () => {
+            if (element.offsetParent !== null) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            } else if (attempts < 3) {
+              attempts++;
+              setTimeout(tryScroll, 300);
+            }
+          };
+          tryScroll();
+        }
+      }
+    }
+  }
+}
 </script>

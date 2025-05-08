@@ -644,142 +644,39 @@
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto reveal">
-          <div className="space-y-6">
-            <!-- FAQ Item 1 -->
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <button
-                className="faq-toggle w-full flex justify-between items-center p-6 focus:outline-none"
-              >
-                <h3 className="text-lg font-semibold text-secondary-900 text-left">
-                  Bagaimana cara berlangganan paket?
-                </h3>
-                <i
-                  className="fas fa-chevron-down text-primary-600 transition-transform duration-300"
-                ></i>
-              </button>
-              <div className="faq-content hidden px-6 pb-6">
-                <p className="text-secondary-600">
-                  Untuk berlangganan paket, Anda dapat mendaftar melalui website
-                  kami atau menghubungi layanan pelanggan kami. Setelah
-                  mendaftar, Anda akan diminta untuk mengisi informasi kontak
-                  dan jadwal pengambilan yang diinginkan. Pembayaran dapat
-                  dilakukan melalui transfer bank, kartu kredit, atau e-wallet.
-                </p>
-              </div>
-            </div>
-
-            <!-- FAQ Item 2 -->
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <button
-                className="faq-toggle w-full flex justify-between items-center p-6 focus:outline-none"
-              >
-                <h3 className="text-lg font-semibold text-secondary-900 text-left">
-                  Apakah saya bisa mengubah paket saya?
-                </h3>
-                <i
-                  className="fas fa-chevron-down text-primary-600 transition-transform duration-300"
-                ></i>
-              </button>
-              <div className="faq-content hidden px-6 pb-6">
-                <p className="text-secondary-600">
-                  Ya, Anda dapat mengubah paket Anda kapan saja. Perubahan akan
-                  berlaku pada periode penagihan berikutnya. Untuk mengubah
-                  paket, silakan masuk ke akun Anda atau hubungi layanan
-                  pelanggan kami.
-                </p>
-              </div>
-            </div>
-
-            <!-- FAQ Item 3 -->
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <button
-                className="faq-toggle w-full flex justify-between items-center p-6 focus:outline-none"
-              >
-                <h3 className="text-lg font-semibold text-secondary-900 text-left">
-                  Bagaimana jika saya melebihi batas berat paket saya?
-                </h3>
-                <i
-                  className="fas fa-chevron-down text-primary-600 transition-transform duration-300"
-                ></i>
-              </button>
-              <div className="faq-content hidden px-6 pb-6">
-                <p className="text-secondary-600">
-                  Jika Anda melebihi batas berat paket, kami akan mengenakan
-                  biaya tambahan per kilogram. Biaya tambahan ini akan
-                  ditambahkan ke tagihan bulanan Anda atau dapat dibayarkan
-                  langsung saat pengantaran.
-                </p>
-              </div>
-            </div>
-
-            <!-- FAQ Item 4 -->
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <button
-                className="faq-toggle w-full flex justify-between items-center p-6 focus:outline-none"
-              >
-                <h3 className="text-lg font-semibold text-secondary-900 text-left">
-                  Apakah ada kontrak jangka panjang?
-                </h3>
-                <i
-                  className="fas fa-chevron-down text-primary-600 transition-transform duration-300"
-                ></i>
-              </button>
-              <div className="faq-content hidden px-6 pb-6">
-                <p className="text-secondary-600">
-                  Tidak, kami tidak mengharuskan kontrak jangka panjang. Anda
-                  dapat berlangganan bulanan atau tahunan dan dapat membatalkan
-                  kapan saja. Untuk langganan tahunan, kami menawarkan diskon
-                  20% dari harga bulanan.
-                </p>
-              </div>
-            </div>
-
-            <!-- FAQ Item 5 -->
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <button
-                className="faq-toggle w-full flex justify-between items-center p-6 focus:outline-none"
-              >
-                <h3 className="text-lg font-semibold text-secondary-900 text-left">
-                  Bagaimana cara membatalkan langganan?
-                </h3>
-                <i
-                  className="fas fa-chevron-down text-primary-600 transition-transform duration-300"
-                ></i>
-              </button>
-              <div className="faq-content hidden px-6 pb-6">
-                <p className="text-secondary-600">
-                  Untuk membatalkan langganan, Anda dapat masuk ke akun Anda dan
-                  memilih opsi "Batalkan Langganan" atau menghubungi layanan
-                  pelanggan kami. Pembatalan akan berlaku pada akhir periode
-                  penagihan saat ini.
-                </p>
-              </div>
-            </div>
-
-            <!-- FAQ Item 6 -->
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <button
-                className="faq-toggle w-full flex justify-between items-center p-6 focus:outline-none"
-              >
-                <h3 className="text-lg font-semibold text-secondary-900 text-left">
-                  Apakah ada biaya pengiriman tambahan?
-                </h3>
-                <i
-                  className="fas fa-chevron-down text-primary-600 transition-transform duration-300"
-                ></i>
-              </button>
-              <div className="faq-content hidden px-6 pb-6">
-                <p className="text-secondary-600">
-                  Tidak, biaya pengambilan dan pengantaran sudah termasuk dalam
-                  harga paket untuk area layanan kami. Namun, untuk lokasi di
-                  luar area layanan kami, mungkin ada biaya tambahan yang akan
-                  kami informasikan sebelumnya.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div class="max-w-3xl mx-auto reveal">
+    <div class="space-y-6">
+      <!-- Dynamic FAQ Items -->
+      <div 
+        v-for="(item, index) in faqItems" 
+        :key="index"
+        class="bg-white rounded-xl shadow-md overflow-hidden"
+        :id="`faq-item-${index}`"
+      >
+        <button
+          class="faq-toggle w-full flex justify-between items-center p-6 focus:outline-none"
+          @click="toggleFaq(index)"
+        >
+          <h3 class="text-lg font-semibold text-secondary-900 text-left">
+            {{ item.question }}
+          </h3>
+          <i
+            :class="[
+              'fas fa-chevron-down text-primary-600 transition-transform duration-300',
+              { 'transform rotate-180': openIndex === index }
+            ]"
+          ></i>
+        </button>
+        <div
+          class="px-6 pb-6 transition-all duration-300"
+          :class="{ 'hidden': openIndex !== index }"
+        >
+          <p class="text-secondary-600">{{ item.answer }}</p>
         </div>
+      </div>
+    </div>
+  </div>
+        
       </div>
     </section>
 
@@ -826,4 +723,88 @@
 <script setup>
 import Header from '../components/Header.vue'
 import Footer from '../components/Footer.vue'
+</script>
+
+<script>
+export default {
+  name: 'DynamicFaqAccordion',
+  props: {
+    // You can pass FAQ items from parent component
+    items: {
+      type: Array,
+      default: () => []
+    }
+  },
+  data() {
+    return {
+      openIndex: null,
+      // Default FAQ items if none are provided via props
+      defaultFaqItems: [
+        {
+          question: "Bagaimana cara berlangganan paket?",
+          answer: "Untuk berlangganan paket, Anda dapat mendaftar melalui website kami atau menghubungi layanan pelanggan kami. Setelah mendaftar, Anda akan diminta untuk mengisi informasi kontak dan jadwal pengambilan yang diinginkan. Pembayaran dapat dilakukan melalui transfer bank, kartu kredit, atau e-wallet."
+        },
+        {
+          question: "Apakah saya bisa mengubah paket saya?",
+          answer: "Ya, Anda dapat mengubah paket Anda kapan saja. Perubahan akan berlaku pada periode penagihan berikutnya. Untuk mengubah paket, silakan masuk ke akun Anda atau hubungi layanan pelanggan kami."
+        },
+        {
+          question: "Bagaimana jika saya melebihi batas berat paket saya?",
+          answer: "Jika Anda melebihi batas berat paket, kami akan mengenakan biaya tambahan per kilogram. Biaya tambahan ini akan ditambahkan ke tagihan bulanan Anda atau dapat dibayarkan langsung saat pengantaran."
+        },
+        {
+          question: "Apakah ada kontrak jangka panjang?",
+          answer: "Tidak, kami tidak mengharuskan kontrak jangka panjang. Anda dapat berlangganan bulanan atau tahunan dan dapat membatalkan kapan saja. Untuk langganan tahunan, kami menawarkan diskon 20% dari harga bulanan."
+        },
+        {
+          question: "Bagaimana cara membatalkan langganan?",
+          answer: "Untuk membatalkan langganan, Anda dapat masuk ke akun Anda dan memilih opsi \"Batalkan Langganan\" atau menghubungi layanan pelanggan kami. Pembatalan akan berlaku pada akhir periode penagihan saat ini."
+        },
+        {
+          question: "Apakah ada biaya pengiriman tambahan?",
+          answer: "Tidak, biaya pengambilan dan pengantaran sudah termasuk dalam harga paket untuk area layanan kami. Namun, untuk lokasi di luar area layanan kami, mungkin ada biaya tambahan yang akan kami informasikan sebelumnya."
+        }
+      ]
+    }
+  },
+  computed: {
+    // Use provided items or fall back to default items
+    faqItems() {
+      return this.items.length > 0 ? this.items : this.defaultFaqItems;
+    }
+  },
+  methods: {
+    toggleFaq(index) {
+      if (this.openIndex === index) {
+        // If clicking the same item, close it
+        this.openIndex = null;
+      } else {
+        // Otherwise, open the clicked item
+        this.openIndex = index;
+      }
+    }
+  },
+  mounted() {
+    // Check for hash in URL to open specific FAQ
+    if (this.$route.hash) {
+      const id = this.$route.hash.substring(1); // Remove the # character
+      const match = id.match(/faq-item-(\d+)/);
+      
+      if (match && match[1]) {
+        const index = parseInt(match[1]);
+        if (!isNaN(index) && index >= 0 && index < this.faqItems.length) {
+          this.openIndex = index;
+          
+          // Scroll to the element
+          setTimeout(() => {
+            const element = document.querySelector(this.$route.hash);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 300);
+        }
+      }
+    }
+  }
+}
 </script>
