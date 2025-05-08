@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
 defineProps({
   msg: String,
@@ -66,35 +66,35 @@ const count = ref(0)
             <ul className="space-y-3">
               <li>
                 <a
-                  href="about.html"
+                  href="/about"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Tentang Kami</a
                 >
               </li>
               <li>
                 <a
-                  href="services.html"
+                  href="/services"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Layanan</a
                 >
               </li>
               <li>
                 <a
-                  href="pricing.html"
+                  href="/pricing"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Harga</a
                 >
               </li>
               <li>
                 <a
-                  href="contact.html"
+                  href="/contact"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Kontak</a
                 >
               </li>
               <li>
                 <a
-                  href="faq.html"
+                  href="/faq"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >FAQ</a
                 >
@@ -110,35 +110,35 @@ const count = ref(0)
             <ul className="space-y-3">
               <li>
                 <a
-                  href="services.html#laundry"
+                  href="/services#laundry"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Cuci & Lipat</a
                 >
               </li>
               <li>
                 <a
-                  href="services.html#dry-cleaning"
+                  href="/services#dry-cleaning"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Cuci Kering</a
                 >
               </li>
               <li>
                 <a
-                  href="services.html#ironing"
+                  href="/services#ironing"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Setrika & Pres</a
                 >
               </li>
               <li>
                 <a
-                  href="services.html#household"
+                  href="/services#household"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Linen Rumah Tangga</a
                 >
               </li>
               <li>
                 <a
-                  href="services.html#express"
+                  href="/services#express"
                   className="text-secondary-600 hover:text-primary-600 transition-colors duration-300"
                   >Layanan Ekspres</a
                 >
