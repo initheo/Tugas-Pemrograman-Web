@@ -652,7 +652,7 @@
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a
-              href="contact.html"
+              href="/contact"
               className="inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-all duration-300"
             >
               <i className="fas fa-headset mr-2"></i>

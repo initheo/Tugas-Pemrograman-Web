@@ -550,7 +550,7 @@
 
         <div className="mt-16 text-center reveal">
           <a
-            href="pricing.html"
+            href="/pricing"
             className="inline-flex items-center bg-primary-600 text-white px-8 py-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
           >
             <span>Lihat Harga Layanan Kami</span>
@@ -586,7 +586,7 @@
               Jadwalkan Penjemputan
             </a>
             <a
-              href="contact.html"
+              href="/contact"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-md font-medium hover:bg-white/10 transition-all duration-300 text-center"
             >
               Hubungi Kami

@@ -297,22 +297,46 @@
             seluruh kota.
           </p>
         </div>
-        <div className="rounded-xl overflow-hidden shadow-lg reveal">
-          <!-- Placeholder for Google Maps -->
-          <div
-            className="w-full h-96 bg-secondary-200 flex items-center justify-center"
-          >
-            <div className="text-center">
-              <i
-                className="fas fa-map-marked-alt text-5xl text-secondary-400 mb-4"
-              ></i>
-              <p className="text-secondary-600">
-                Peta Google akan ditampilkan di sini
-              </p>
-              <p className="text-sm text-secondary-500 mt-2">
-                Untuk implementasi nyata, tambahkan API Google Maps
-              </p>
-            </div>
+        <div class="rounded-xl overflow-hidden shadow-lg reveal">
+          <div style="height: 400px; width: 100%; position: relative;">
+            <l-map
+              v-model:zoom="zoom"
+              v-model:center="center"
+              :use-global-leaflet="false"
+              :options="mapOptions"
+              style="height: 100%"
+            >
+              <l-tile-layer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                layer-type="base"
+                name="OpenStreetMap"
+                attribution="&copy; OpenStreetMap contributors"
+              />
+              <l-marker :lat-lng="markerLatLng">
+                <l-popup>
+                  <div>
+                    <h3 class="font-bold">LaundrEase</h3>
+                    <p>Universitas Internasional Semen Indonesia</p>
+                  </div>
+                </l-popup>
+              </l-marker>
+              <l-control position="topright">
+                <div class="leaflet-control leaflet-bar">
+                  <button
+                    @click="zoom++"
+                    class="p-2 bg-white hover:bg-gray-100 border-b"
+                  >
+                    <i class="fas fa-plus"></i>
+                  </button>
+                  <button
+                    @click="zoom--"
+                    class="p-2 bg-white hover:bg-gray-100"
+                  >
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </l-control>
+            </l-map>
           </div>
         </div>
       </div>
@@ -451,7 +475,7 @@
               Jadwalkan Penjemputan
             </a>
             <a
-              href="register.html"
+              href="/login"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-md font-medium hover:bg-white/10 transition-all duration-300 text-center"
             >
               Daftar Sekarang
@@ -466,6 +490,73 @@
 </template>
 
 <script setup>
+import { LControl, LMap, LMarker, LPopup, LTileLayer } from "@vue-leaflet/vue-leaflet";
+import L from 'leaflet';
+import "leaflet/dist/leaflet.css";
+import { onMounted, ref } from 'vue';
 import Footer from '../components/Footer.vue';
 import Header from '../components/Header.vue';
+
+// Create reactive references for map properties
+const zoom = ref(20); // untuk tampilan lebih dekat
+const center = ref([-7.175587411825591,112.64973322833183]); // UISI coordinates
+const markerLatLng = ref([-7.175587411825591,112.64973322833183]);
+
+// Tetapkan ukuran map yang eksplisit
+const mapStyle = {
+  height: "400px",
+  width: "100%",
+  zIndex: 0
+};
+
+// Tambahkan options untuk map
+const mapOptions = {
+  zoomControl: false, // Kita menggunakan custom controls
+  scrollWheelZoom: true
+};
+
+// Fix Leaflet default icon path issue
+onMounted(() => {
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
+  });
+});
 </script>
+
+<style>
+@import "leaflet/dist/leaflet.css";
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+.leaflet-control {
+  z-index: 2;
+}
+
+/* Tambahkan untuk memastikan map terlihat */
+.leaflet-map-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+/* Custom map controls */
+.leaflet-control button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+}
+
+.leaflet-control button:hover {
+  color: #0284c7;
+}
+</style>

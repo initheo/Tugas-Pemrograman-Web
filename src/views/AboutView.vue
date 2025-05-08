@@ -459,7 +459,7 @@
 
         <div className="mt-16 text-center reveal">
           <a
-            href="services.html"
+            href="/services"
             className="inline-flex items-center bg-primary-600 text-white px-8 py-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
           >
             <span>Jelajahi Layanan Kami</span>

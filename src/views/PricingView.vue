@@ -812,7 +812,7 @@
               Lihat Semua Paket
             </a>
             <a
-              href="contact.html"
+              href="/contact"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-md font-medium hover:bg-white/10 transition-all duration-300 text-center"
             >
               Hubungi Kami
