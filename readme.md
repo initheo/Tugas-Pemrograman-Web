@@ -29,18 +29,19 @@ cd Tugas-Pemrograman-Web
 
 2. Install dependencies
 
-````bash
+```bash
 npm install
 # atau jika menggunakan pnpm
 pnpm install
-``
+```
+
 3. Jalankan aplikasi dalam mode development
 
 ```bash
 npm run dev
 # atau
 pnpm dev
-````
+```
 
 4. Build untuk production
 
