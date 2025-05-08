@@ -25,7 +25,7 @@
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1440 120"
-          className="fill-white"
+          class="fill-white"
         >
           <path
             d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"
@@ -550,7 +550,7 @@
 
         <div className="mt-16 text-center reveal">
           <a
-            href="pricing.html"
+            href="/pricing"
             className="inline-flex items-center bg-primary-600 text-white px-8 py-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
           >
             <span>Lihat Harga Layanan Kami</span>
@@ -586,7 +586,7 @@
               Jadwalkan Penjemputan
             </a>
             <a
-              href="contact.html"
+              href="/contact"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-md font-medium hover:bg-white/10 transition-all duration-300 text-center"
             >
               Hubungi Kami
@@ -601,8 +601,8 @@
 </template>
 
 <script setup>
-import Header from '../components/Header.vue'
-import Footer from '../components/Footer.vue'
+import Footer from '../components/Footer.vue';
+import Header from '../components/Header.vue';
 </script>
 
 <script>

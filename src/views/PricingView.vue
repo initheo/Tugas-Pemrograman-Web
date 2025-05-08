@@ -26,7 +26,7 @@
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1440 120"
-          className="fill-white"
+          class="fill-white"
         >
           <path
             d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"
@@ -36,23 +36,29 @@
     </section>
 
     <!-- Pricing Toggle Section -->
-    <section className="py-12 bg-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center justify-center mb-12 reveal">
-          <div className="flex items-center space-x-4">
-            <span className="text-lg font-medium text-secondary-700">Bulanan</span>
-            <label className="pricing-toggle">
-              <input type="checkbox" id="pricing-toggle" />
-              <span className="pricing-slider"></span>
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col items-center justify-center mb-12 reveal">
+          <div class="flex items-center space-x-4">
+            <span class="text-lg font-medium" :class="{ 'text-primary-600': !isYearly, 'text-secondary-700': isYearly }">
+              Bulanan
+            </span>
+            <label class="pricing-toggle">
+              <input 
+                type="checkbox" 
+                id="pricing-toggle" 
+                v-model="isYearly"
+                @change="togglePrice"
+              />
+              <span class="pricing-slider"></span>
             </label>
-            <div className="flex items-center">
-              <span className="text-lg font-medium text-secondary-700"
-                >Tahunan</span
-              >
-              <span
-                className="ml-2 px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full"
-                >Hemat 20%</span
-              >
+            <div class="flex items-center">
+              <span class="text-lg font-medium" :class="{ 'text-primary-600': isYearly, 'text-secondary-700': !isYearly }">
+                Tahunan
+              </span>
+              <span class="ml-2 px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
+                Hemat 20%
+              </span>
             </div>
           </div>
         </div>
@@ -75,14 +81,13 @@
                 Ideal untuk individu dengan kebutuhan laundry sederhana
               </p>
               <div className="flex items-baseline">
-                <span className="text-4xl font-bold text-primary-600 monthly-price"
-                  >Rp 199.000</span
-                >
-                <span
-                  className="text-4xl font-bold text-primary-600 yearly-price hidden"
-                  >Rp 1.910.000</span
-                >
-                <span className="text-secondary-500 ml-2">/bulan</span>
+                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': isYearly }">
+                  Rp 199.000
+                </span>
+                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': !isYearly }">
+                  Rp 1.910.000
+                </span>
+                <span className="text-secondary-500 ml-2">{{ isYearly ? '/tahun' : '/bulan' }}</span>
               </div>
               <p className="text-sm text-secondary-500 mt-2">
                 Atau mulai dari Rp 50.000 per pengambilan
@@ -145,14 +150,13 @@
                 Sempurna untuk keluarga kecil atau pasangan
               </p>
               <div className="flex items-baseline">
-                <span className="text-4xl font-bold text-primary-600 monthly-price"
-                  >Rp 349.000</span
-                >
-                <span
-                  className="text-4xl font-bold text-primary-600 yearly-price hidden"
-                  >Rp 3.350.000</span
-                >
-                <span className="text-secondary-500 ml-2">/bulan</span>
+                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': isYearly }">
+                  Rp 349.000
+                </span>
+                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': !isYearly }">
+                  Rp 3.350.000
+                </span>
+                <span className="text-secondary-500 ml-2">{{ isYearly ? '/tahun' : '/bulan' }}</span>
               </div>
               <p className="text-sm text-secondary-500 mt-2">
                 Atau mulai dari Rp 80.000 per pengambilan
@@ -210,14 +214,13 @@
                 Solusi lengkap untuk keluarga besar
               </p>
               <div className="flex items-baseline">
-                <span className="text-4xl font-bold text-primary-600 monthly-price"
-                  >Rp 599.000</span
-                >
-                <span
-                  className="text-4xl font-bold text-primary-600 yearly-price hidden"
-                  >Rp 5.750.000</span
-                >
-                <span className="text-secondary-500 ml-2">/bulan</span>
+                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': isYearly }">
+                  Rp 599.000
+                </span>
+                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': !isYearly }">
+                  Rp 5.750.000
+                </span>
+                <span className="text-secondary-500 ml-2">{{ isYearly ? '/tahun' : '/bulan' }}</span>
               </div>
               <p className="text-sm text-secondary-500 mt-2">
                 Atau mulai dari Rp 120.000 per pengambilan
@@ -706,7 +709,7 @@
               Lihat Semua Paket
             </a>
             <a
-              href="contact.html"
+              href="/contact"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-md font-medium hover:bg-white/10 transition-all duration-300 text-center"
             >
               Hubungi Kami
@@ -721,8 +724,36 @@
 </template>
 
 <script setup>
-import Header from '../components/Header.vue'
-import Footer from '../components/Footer.vue'
+import { onMounted, ref } from 'vue';
+import Footer from '../components/Footer.vue';
+import Header from '../components/Header.vue';
+
+// Add reactive reference for toggle state
+const isYearly = ref(false);
+
+// Toggle function
+const togglePrice = () => {
+  isYearly.value = !isYearly.value;
+  
+  // Get all price elements
+  const monthlyPrices = document.querySelectorAll('.monthly-price');
+  const yearlyPrices = document.querySelectorAll('.yearly-price');
+
+  // Toggle visibility based on state
+  monthlyPrices.forEach(price => {
+    price.classList.toggle('hidden', isYearly.value);
+  });
+  
+  yearlyPrices.forEach(price => {
+    price.classList.toggle('hidden', !isYearly.value);
+  });
+};
+
+// Add event listener when component is mounted
+onMounted(() => {
+  const pricingToggle = document.getElementById('pricing-toggle');
+  pricingToggle?.addEventListener('change', togglePrice);
+});
 </script>
 
 <script>
