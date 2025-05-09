@@ -1,10 +1,19 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink } from 'vue-router';
 
 defineProps({
   msg: String,
 })
+
+// Add navigation items array
+const navItems = [
+  { path: '/', label: 'Beranda' },
+  { path: '/about', label: 'Tentang Kami' },
+  { path: '/services', label: 'Layanan' },
+  { path: '/pricing', label: 'Harga' },
+  { path: '/faq', label: 'FAQ' },
+  { path: '/contact', label: 'Kontak' }
+]
 
 </script>
 
@@ -32,32 +41,19 @@ defineProps({
 
           <!-- Desktop Navigation -->
           <nav className="hidden md:flex space-x-1 lg:space-x-2">
-          
-            <RouterLink to="/"
-              className="px-3 py-2 text-primary-600 font-medium rounded-md bg-primary-50 transition-all duration-300"
-            >Beranda</RouterLink>
-
-            <RouterLink to="/about"
-              className="px-3 py-2 text-primary-600 font-medium rounded-md bg-primary-50 transition-all duration-300"
-            >Tentang Kami</RouterLink>
-
-            <RouterLink to="/services"
-              className="px-3 py-2 text-primary-600 font-medium rounded-md bg-primary-50 transition-all duration-300"
-            >Layanan</RouterLink>
-
-            <RouterLink to="/pricing"
-              className="px-3 py-2 text-primary-600 font-medium rounded-md bg-primary-50 transition-all duration-300"
-            >Harga</RouterLink>
-
-            <RouterLink to="/faq"
-              className="px-3 py-2 text-primary-600 font-medium rounded-md bg-primary-50 transition-all duration-300"
-            >FAQ</RouterLink>
-
-
-            <RouterLink to="/contact"
-              className="px-3 py-2 text-primary-600 font-medium rounded-md bg-primary-50 transition-all duration-300"
-            >Kontak</RouterLink>
-
+            <RouterLink
+              v-for="item in navItems"
+              :key="item.path"
+              :to="item.path"
+              class="px-3 py-2 font-medium transition-all duration-300 rounded-md"
+              :class="[
+                $route.path === item.path
+                  ? 'bg-primary-50 text-primary-600'
+                  : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50'
+              ]"
+            >
+              {{ item.label }}
+            </RouterLink>
           </nav>
 
           <div className="hidden md:flex items-center space-x-3">
@@ -84,17 +80,19 @@ defineProps({
         <!-- Mobile Navigation -->
         <div ref="mobileMenu" id="mobile-menu" className="md:hidden hidden pb-6 animate-fade-in">
           <nav className="flex flex-col space-y-1 mt-2">
-
-            <!-- <a
+            <RouterLink
               v-for="item in navItems"
               :key="item.path"
-              :href="item.path"
-              :class="route.path === item.path 
-                ? 'text-primary-600 font-medium py-3 px-4 rounded-md bg-primary-50 transition-all duration-300'
-                : 'text-secondary-600 hover:text-primary-600 font-medium py-3 px-4 rounded-md hover:bg-primary-50 transition-all duration-300'"
-            >{{ item.label }}</a> -->
-
-
+              :to="item.path"
+              class="px-4 py-3 font-medium transition-all duration-300 rounded-md"
+              :class="[
+                $route.path === item.path
+                  ? 'bg-primary-50 text-primary-600'
+                  : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50'
+              ]"
+            >
+              {{ item.label }}
+            </RouterLink>
           </nav>
           <div
             className="flex flex-col space-y-3 mt-4 pt-4 border-t border-secondary-100 px-4"
