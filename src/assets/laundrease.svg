@@ -1,0 +1,7 @@
+<svg width="48" height="48" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lingkaran biru sebagai latar belakang -->
+  <circle cx="12" cy="12" r="12" fill="#007ACC"/>
+
+  <!-- Bentuk T-shirt putih -->
+  <path d="M10 8 Q12 9.2 14 8 L14.8 8 L17.3 9.2 L17.3 11.8 L15.3 12.8 L15.3 17 L8.7 17 L8.7 12.8 L6.7 11.8 L6.7 9.2 L9.2 8 L10 8 Z" fill="white"/>
+</svg>

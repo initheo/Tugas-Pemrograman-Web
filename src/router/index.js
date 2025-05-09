@@ -3,46 +3,58 @@ import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
 import FaqView from '../views/FaqView.vue'
 import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
 import PricingView from '../views/PricingView.vue'
 import ServicesView from '../views/ServicesView.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView
+    name: 'Home',
+    component: HomeView,
+    meta: {
+      title: 'Beranda'
+    }
   },
   {
     path: '/about',
-    name: 'about',
-    component: AboutView
-  },
-  {
-    path: '/contact',
-    name: 'contact',
-    component: ContactView
-  },
-  {
-    path: '/faq',
-    name: 'faq',
-    component: FaqView
+    name: 'About',
+    component: AboutView,
+    meta: {
+      title: 'Tentang Kami'
+    }
   },
   {
     path: '/services',
-    name: 'services',
-    component: ServicesView
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: LoginView
+    name: 'Services',
+    component: ServicesView,
+    meta: {
+      title: 'Layanan'
+    }
   },
   {
     path: '/pricing',
-    name: 'pricing',
-    component: PricingView
+    name: 'Pricing',
+    component: PricingView,
+    meta: {
+      title: 'Harga'
+    }
   },
+  {
+    path: '/faq',
+    name: 'FAQ',
+    component: FaqView,
+    meta: {
+      title: 'FAQ'
+    }
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: ContactView,
+    meta: {
+      title: 'Kontak'
+    }
+  }
 ]
 
 const router = createRouter({
