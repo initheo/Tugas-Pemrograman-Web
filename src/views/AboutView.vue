@@ -48,13 +48,13 @@
               Perjalanan LaundrEase
             </h2>
             <p className="text-lg text-secondary-600 mb-6">
-              LaundrEase didirikan pada tahun 2018 dengan visi sederhana:
+              LaundrEase didirikan pada tahun 2025 dengan visi sederhana:
               membuat mencuci pakaian menjadi lebih mudah bagi semua orang. Kami
               memahami bahwa dalam kehidupan modern yang sibuk, waktu adalah
               aset berharga.
             </p>
             <p className="text-lg text-secondary-600 mb-6">
-              Pendiri kami, Budi Santoso, seorang profesional sibuk yang
+              Pendiri kami, Faiz Nurullah, seorang profesional sibuk yang
               frustrasi dengan waktu berharga yang terbuang untuk mencuci
               pakaian, memutuskan untuk menciptakan solusi yang akan mengubah
               industri laundry selamanya.
@@ -184,15 +184,15 @@
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <!-- Team Member 1 -->
           <div
             className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group reveal"
           >
             <div className="relative overflow-hidden h-64">
               <img
-                src="https://randomuser.me/api/portraits/men/32.jpg"
-                alt="Budi Santoso"
+                src="https://gapura.uisi.ac.id/assets/upload/user/300x300/4d37b8189613a907d7090f8f79b51657.JPG"
+                alt="Faiz Nurullah"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy"
               />
@@ -228,7 +228,7 @@
               <h3
                 className="text-xl font-semibold mb-1 text-secondary-900 group-hover:text-primary-600 transition-colors duration-300"
               >
-                Budi Santoso
+                Faiz Nurullah
               </h3>
               <p className="text-primary-600 font-medium">Founder & CEO</p>
             </div>
@@ -240,8 +240,8 @@
           >
             <div className="relative overflow-hidden h-64">
               <img
-                src="https://randomuser.me/api/portraits/women/44.jpg"
-                alt="Siti Rahayu"
+                src="https://gapura.uisi.ac.id/assets/upload/user/300x300/29410f7921cf04cbb2525fd3e048b2ee.JPG"
+                alt="Ari Setia Hinanda"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy"
               />
@@ -277,8 +277,9 @@
               <h3
                 className="text-xl font-semibold mb-1 text-secondary-900 group-hover:text-primary-600 transition-colors duration-300"
               >
-                Siti Rahayu
+                Ari Setia Hinanda
               </h3>
+                
               <p className="text-primary-600 font-medium">Operations Manager</p>
             </div>
           </div>
@@ -289,8 +290,8 @@
           >
             <div className="relative overflow-hidden h-64">
               <img
-                src="https://randomuser.me/api/portraits/men/67.jpg"
-                alt="Agus Wijaya"
+                src="https://gapura.uisi.ac.id/assets/upload/user/300x300/3d2825956bd72cdbd02668d0028665ee.JPG"
+                alt="Muhammad Muqoffin Nuha"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy"
               />
@@ -326,58 +327,9 @@
               <h3
                 className="text-xl font-semibold mb-1 text-secondary-900 group-hover:text-primary-600 transition-colors duration-300"
               >
-                Agus Wijaya
+                Muhammad Muqoffin Nuha
               </h3>
               <p className="text-primary-600 font-medium">Technology Director</p>
-            </div>
-          </div>
-
-          <!-- Team Member 4 -->
-          <div
-            className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group reveal"
-          >
-            <div className="relative overflow-hidden h-64">
-              <img
-                src="https://randomuser.me/api/portraits/women/28.jpg"
-                alt="Maya Putri"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                loading="lazy"
-              />
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              ></div>
-              <div
-                className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"
-              >
-                <div className="flex space-x-3 justify-center">
-                  <a
-                    href="#"
-                    className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-primary-600 transition-all duration-300"
-                  >
-                    <i className="fab fa-linkedin-in"></i>
-                  </a>
-                  <a
-                    href="#"
-                    className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-primary-600 transition-all duration-300"
-                  >
-                    <i className="fab fa-twitter"></i>
-                  </a>
-                  <a
-                    href="#"
-                    className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-primary-600 transition-all duration-300"
-                  >
-                    <i className="fas fa-envelope"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 text-center">
-              <h3
-                className="text-xl font-semibold mb-1 text-secondary-900 group-hover:text-primary-600 transition-colors duration-300"
-              >
-                Maya Putri
-              </h3>
-              <p className="text-primary-600 font-medium">Customer Experience</p>
             </div>
           </div>
         </div>
