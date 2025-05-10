@@ -190,9 +190,7 @@
                     Alamat Kantor Pusat
                   </h4>
                   <p className="text-secondary-600">
-                    Jl. Laundry Raya No. 123<br />
-                    Jakarta Selatan, 12345<br />
-                    Indonesia
+                    Jl. Raya Gresik No. 123, Gresik, Jawa Timur 61122
                   </p>
                 </div>
               </div>
@@ -205,9 +203,8 @@
                 </div>
                 <div>
                   <h4 className="font-semibold text-secondary-900 mb-1">Telepon</h4>
-                  <p className="text-secondary-600">
-                    Layanan Pelanggan: (021) 123-4567<br />
-                    Kantor: (021) 765-4321
+                  <p className="text-secondary-600"> 
+                    Kantor: (031) 1234-5678
                   </p>
                 </div>
               </div>
@@ -222,7 +219,7 @@
                   <h4 className="font-semibold text-secondary-900 mb-1">Email</h4>
                   <p className="text-secondary-600">
                     Layanan Pelanggan: customer@laundrease.com<br />
-                    Info Umum: info@laundrease.com<br />
+                    Info Umum: hello@laundrease.com<br />
                     Karir: careers@laundrease.com
                   </p>
                 </div>

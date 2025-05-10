@@ -1018,6 +1018,7 @@
                 siap membantu segala pertanyaan Anda.
               </p>
 
+
               <div className="space-y-6">
                 <div className="flex items-start">
                   <div
@@ -1030,7 +1031,7 @@
                       Lokasi Kami
                     </h4>
                     <p className="text-secondary-600">
-                      123 Laundry Lane, Suite 100<br />New York, NY 10001
+                      Jl. Raya Gresik No. 123, Gresik, Jawa Timur 61122
                     </p>
                   </div>
                 </div>
@@ -1045,7 +1046,7 @@
                     <h4 className="font-semibold text-secondary-900 mb-1">
                       Nomor Telepon
                     </h4>
-                    <p className="text-secondary-600">(555) 123-4567</p>
+                    <p className="text-secondary-600">(031) 1234-5678</p>
                   </div>
                 </div>
 
@@ -1059,7 +1060,7 @@
                     <h4 className="font-semibold text-secondary-900 mb-1">
                       Alamat Surel
                     </h4>
-                    <p className="text-secondary-600">info@LaundrEase.com</p>
+                    <p className="text-secondary-600">hello@laundrease.com</p>
                   </div>
                 </div>
 
