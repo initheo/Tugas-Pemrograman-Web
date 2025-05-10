@@ -6,6 +6,7 @@ import HomeView from '../views/HomeView.vue'
 import PricingView from '../views/PricingView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import ServicesView from '../views/ServicesView.vue'
+import LoginView from '../views/LoginView.vue'
 
 const routes = [
   {
