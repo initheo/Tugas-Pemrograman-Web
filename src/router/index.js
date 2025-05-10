@@ -3,7 +3,9 @@ import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
 import FaqView from '../views/FaqView.vue'
 import HomeView from '../views/HomeView.vue'
+import LoginView from '../views/LoginView.vue'
 import PricingView from '../views/PricingView.vue'
+import RegisterView from '../views/RegisterView.vue'
 import ServicesView from '../views/ServicesView.vue'
 
 const routes = [
@@ -53,6 +55,22 @@ const routes = [
     component: ContactView,
     meta: {
       title: 'Kontak'
+    }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginView,
+    meta: {
+      title: 'Login'
+    }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: RegisterView,
+    meta: {
+      title: 'Register'
     }
   }
 ]

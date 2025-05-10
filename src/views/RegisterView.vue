@@ -2,37 +2,50 @@
   <div>
     <Header />
     
-    <!-- Login Section -->
-    <main
-      className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
-    >
+    <!-- Register Section -->
+    <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 reveal">
         <div className="text-center">
-          <div
-            className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-white mx-auto mb-6"
-          >
-            <i className="fas fa-user text-2xl"></i>
+          <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center text-white mx-auto mb-6">
+            <i className="fas fa-user-plus text-2xl"></i>
           </div>
           <h2 className="text-3xl font-bold text-secondary-900 mb-2">
-            Selamat Datang Kembali
+            Buat Akun Baru
           </h2>
           <p className="text-secondary-600">
-            Masuk ke akun Anda untuk mengakses layanan LaundrEase
+            Daftar untuk menggunakan layanan LaundrEase
           </p>
         </div>
+
         <div className="bg-white p-8 rounded-xl shadow-md">
           <form className="space-y-6" action="#" method="POST">
+            <!-- Full Name Input -->
             <div>
-              <label
-                for="email"
-                className="block text-sm font-medium text-secondary-700 mb-1"
-              >
+              <label for="name" className="block text-sm font-medium text-secondary-700 mb-1">
+                Nama Lengkap
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="fas fa-user text-secondary-400"></i>
+                </div>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-secondary-300 rounded-md shadow-sm placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
+                  placeholder="John Doe"
+                />
+              </div>
+            </div>
+
+            <!-- Email Input -->
+            <div>
+              <label for="email" className="block text-sm font-medium text-secondary-700 mb-1">
                 Alamat Email
               </label>
               <div className="relative">
-                <div
-                  className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                >
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <i className="fas fa-envelope text-secondary-400"></i>
                 </div>
                 <input
@@ -76,51 +89,48 @@
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded transition-all duration-300"
-                />
-                <label
-                  for="remember-me"
-                  className="ml-2 block text-sm text-secondary-700"
-                >
-                  Ingat saya
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-primary-600 hover:text-primary-700 transition-all duration-300"
-                >
-                  Lupa kata sandi?
+            <!-- Terms Checkbox -->
+            <div className="flex items-center">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                required
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded transition-all duration-300"
+              />
+              <label for="terms" className="ml-2 block text-sm text-secondary-700">
+                Saya menyetujui
+                <a href="#" className="text-primary-600 hover:text-primary-700">
+                  Syarat dan Ketentuan
                 </a>
-              </div>
+                serta
+                <a href="#" className="text-primary-600 hover:text-primary-700">
+                  Kebijakan Privasi
+                </a>
+              </label>
             </div>
 
+            <!-- Submit Button -->
             <div>
               <button
                 type="submit"
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-300 transform hover:-translate-y-0.5"
               >
-                Masuk
+                Daftar
               </button>
             </div>
           </form>
 
+          <!-- Social Login -->
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-secondary-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-secondary-500"
-                  >Atau lanjutkan dengan</span
-                >
+                <span className="px-2 bg-white text-secondary-500">
+                  Atau daftar dengan
+                </span>
               </div>
             </div>
 
@@ -142,21 +152,22 @@
             </div>
           </div>
 
+          <!-- Login Link -->
           <div className="text-center mt-6">
             <p className="text-sm text-secondary-600">
-              Belum memiliki akun?
+              Sudah memiliki akun?
               <RouterLink
-                to="/register"
+                to="/login"
                 className="font-medium text-primary-600 hover:text-primary-700 transition-all duration-300"
               >
-                Daftar sekarang
+                Masuk sekarang
               </RouterLink>
             </p>
           </div>
         </div>
       </div>
     </main>
-    
+
     <Footer />
   </div>
 </template>
@@ -173,3 +184,4 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value;
 };
 </script>
+
