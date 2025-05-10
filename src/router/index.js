@@ -3,7 +3,6 @@ import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
 import FaqView from '../views/FaqView.vue'
 import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
 import PricingView from '../views/PricingView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import ServicesView from '../views/ServicesView.vue'
@@ -56,6 +55,7 @@ const routes = [
     meta: {
       title: 'Kontak'
     }
+<<<<<<< HEAD
   },
   {
     path: '/login',
@@ -72,6 +72,8 @@ const routes = [
     meta: {
       title: 'Register'
     }
+=======
+>>>>>>> 5dff032 (fix: update HTML structure and meta tags for improved SEO and localization)
   }
 ]
 
