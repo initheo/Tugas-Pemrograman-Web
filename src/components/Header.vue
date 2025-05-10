@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
 defineProps({
@@ -15,6 +16,11 @@ const navItems = [
   { path: '/contact', label: 'Kontak' }
 ]
 
+const isMobileMenuOpen = ref(false);
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
 </script>
 
 <template>
@@ -78,34 +84,53 @@ const navItems = [
         </div>
 
         <!-- Mobile Navigation -->
-        <div ref="mobileMenu" id="mobile-menu" className="md:hidden hidden pb-6 animate-fade-in">
-          <nav className="flex flex-col space-y-1 mt-2">
-            <RouterLink
-              v-for="item in navItems"
-              :key="item.path"
-              :to="item.path"
-              class="px-4 py-3 font-medium transition-all duration-300 rounded-md"
-              :class="[
-                $route.path === item.path
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50'
-              ]"
-            >
-              {{ item.label }}
-            </RouterLink>
-          </nav>
-          <div
-            className="flex flex-col space-y-3 mt-4 pt-4 border-t border-secondary-100 px-4"
+        <Transition name="slide-fade">
+          <div 
+            id="mobile-menu" 
+            v-show="isMobileMenuOpen"
+            className="md:hidden pb-6"
           >
-            <RouterLink to="/login"
-              className="text-secondary-600 hover:text-primary-600 font-medium py-2 px-4 rounded-md hover:bg-primary-50 transition-all duration-300 text-center"
-              >Login</RouterLink>
+            <nav className="flex flex-col space-y-1 mt-2">
+              <RouterLink
+                v-for="item in navItems"
+                :key="item.path"
+                :to="item.path"
+                class="px-4 py-3 font-medium transition-all duration-300 rounded-md"
+                :class="[
+                  $route.path === item.path
+                    ? 'bg-primary-50 text-primary-600'
+                    : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50'
+                ]"
+              >
+                {{ item.label }}
+              </RouterLink>
+            </nav>
+            <div
+              className="flex flex-col space-y-3 mt-4 pt-4 border-t border-secondary-100 px-4"
+            >
+              <RouterLink to="/login"
+                className="text-secondary-600 hover:text-primary-600 font-medium py-2 px-4 rounded-md hover:bg-primary-50 transition-all duration-300 text-center"
+                >Login</RouterLink>
 
-            <RouterLink to="/register"
-              className="bg-primary-600 text-white py-3 px-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 text-center"
-              >Sign Up</RouterLink>
+              <RouterLink to="/register"
+                className="bg-primary-600 text-white py-3 px-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 text-center"
+                >Sign Up</RouterLink>
+            </div>
           </div>
-        </div>
+        </Transition>
       </div>
     </header>
 </template>
+
+<style scoped>
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
+}
+</style>
