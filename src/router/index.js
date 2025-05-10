@@ -55,7 +55,6 @@ const routes = [
     meta: {
       title: 'Kontak'
     }
-<<<<<<< HEAD
   },
   {
     path: '/login',
@@ -72,8 +71,6 @@ const routes = [
     meta: {
       title: 'Register'
     }
-=======
->>>>>>> 5dff032 (fix: update HTML structure and meta tags for improved SEO and localization)
   }
 ]
 
