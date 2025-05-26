@@ -80,56 +80,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-align: left;
         }
 
-        table {
+        canvas {
             width: 100%;
+            border: 1px solid #333;
             background-color: #f0f0f0;
-            border-collapse: collapse;
-            border: 1px solid #333;
-        }
-
-        th,
-        td {
-            padding: 12px 8px;
-            text-align: center;
-            border: 1px solid #333;
-        }
-
-        th {
-            text-align: center;
-        }
-
-        td.angka-col {
-            text-align: center;
-            width: 20%;
-            font-weight: bold;
-        }
-
-        .highlight-kelipatan {
-            background-color: lightgreen !important;
-        }
-
-        .kelipatan-col {
-            width: 80%;
-            padding-left: 15px;
-            background-color: #ffffff;
-        }
-
-        .warning {
-            color: #d9534f;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-        }
-
-        tr:nth-child(even) .highlight-kelipatan {
-            background-color: #90EE90 !important;
-        }
-
-        tr:nth-child(even) td.kelipatan-col:not(.highlight-kelipatan) {
-            background-color: #ffffff !important;
         }
     </style>
 </head>
@@ -147,36 +101,93 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="title">Kelipatan dari <?php echo htmlspecialchars($current_kelipatan_factor); ?></div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Angka</th>
-                    <th>Kelipatan</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                for ($i = 1; $i <= 40; $i++):
-                    $is_multiple = ($current_kelipatan_factor > 0 && $i % $current_kelipatan_factor == 0);
-
-                    if ($is_multiple) {
-                        $kelipatan_text = $i . " (kelipatan dari " . htmlspecialchars($current_kelipatan_factor) . ")";
-                        $class_kelipatan = "highlight-kelipatan";
-                    } else {
-                        $kelipatan_text = $i;
-                        $class_kelipatan = "";
-                    }
-                ?>
-                    <tr>
-                        <td class="angka-col"><?php echo $i; ?></td>
-                        <td class="kelipatan-col <?php echo $class_kelipatan; ?>">
-                            <?php echo htmlspecialchars($kelipatan_text); ?>
-                        </td>
-                    </tr>
-                <?php endfor; ?>
-            </tbody>
-        </table>
+        <canvas id="kelipatanCanvas" width="640" height="1300"></canvas>
     </div>
+
+    <script>
+        const canvas = document.getElementById('kelipatanCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const kelipatanFactor = <?php echo $current_kelipatan_factor; ?>;
+
+        // Ukuran sel
+        const cellWidth = canvas.width / 2; // 2 kolom: Angka dan Kelipatan
+        const headerHeight = 40;
+        const rowHeight = 30;
+
+        function drawTable() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw header
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, headerHeight);
+
+            // Header border
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(0, 0, canvas.width, headerHeight);
+            ctx.strokeRect(0, 0, cellWidth * 0.4, headerHeight); // Kolom Angka
+            ctx.strokeRect(cellWidth * 0.4, 0, cellWidth * 1.6, headerHeight); // Kolom Kelipatan
+
+            // Header text
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            ctx.fillText('Angka', (cellWidth * 0.4) / 2, headerHeight / 2);
+            ctx.fillText('Kelipatan', cellWidth * 0.4 + (cellWidth * 1.6) / 2, headerHeight / 2);
+
+            // Draw rows
+            for (let i = 1; i <= 40; i++) {
+                const y = headerHeight + ((i - 1) * rowHeight);
+                const isMultiple = (kelipatanFactor > 0 && i % kelipatanFactor == 0);
+
+                // Row background - kolom angka dengan warna header
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(0, y, cellWidth * 0.4, rowHeight);
+
+                if (isMultiple) {
+                    if (i % 2 === 0) {
+                        ctx.fillStyle = '#90EE90';
+                    } else {
+                        ctx.fillStyle = 'lightgreen';
+                    }
+                    ctx.fillRect(cellWidth * 0.4, y, cellWidth * 1.6, rowHeight);
+                } else {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(cellWidth * 0.4, y, cellWidth * 1.6, rowHeight);
+                }
+
+                // Cell borders - lebih tipis
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 0.5;
+                ctx.strokeRect(0, y, cellWidth * 0.4, rowHeight); // Angka column
+                ctx.strokeRect(cellWidth * 0.4, y, cellWidth * 1.6, rowHeight); // Kelipatan column
+
+                // Draw numbers
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Angka column - tetap di tengah
+                ctx.fillText(i.toString(), (cellWidth * 0.4) / 2, y + rowHeight / 2);
+
+                // Kelipatan column - ubah ke tengah
+                if (isMultiple) {
+                    const text = i + " (kelipatan dari " + kelipatanFactor + ")";
+                    ctx.fillText(text, cellWidth * 0.4 + (cellWidth * 1.6) / 2, y + rowHeight / 2);
+                } else {
+                    ctx.fillText(i.toString(), cellWidth * 0.4 + (cellWidth * 1.6) / 2, y + rowHeight / 2);
+                }
+            }
+        }
+
+        // Draw the table
+        drawTable();
+    </script>
 
 </body>
 

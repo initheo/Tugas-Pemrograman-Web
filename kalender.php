@@ -17,14 +17,6 @@
             background-color: #fff;
         }
 
-        .calendar-canvas {
-            width: 450px;
-            padding: 20px;
-            background-color: #fff;
-            text-align: center;
-            position: relative;
-        }
-
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -51,50 +43,11 @@
             color: #333;
         }
 
-        table {
+        canvas {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th,
-        td {
+            height: auto;
             border: 1px solid #333;
-            padding: 8px;
-            text-align: center;
-            height: 35px;
-            font-size: 14px;
-            vertical-align: middle;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            color: #333;
-        }
-
-        td {
-            background-color: #fff;
-            color: #333;
-        }
-
-        td.current-day-highlight {
-            background-color: red !important;
-            color: white !important;
-            font-weight: bold;
-        }
-
-        td.empty-cell {
-            background-color: #f9f9f9;
-        }
-
-        td:not(.empty-cell):hover {
-            background-color: #e9ecef;
-            cursor: pointer;
-        }
-
-        td.current-day-highlight:hover {
-            background-color: #cc0000 !important;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -109,14 +62,8 @@
             <a id="nextMonth">Bulan Berikutnya &gt;&gt;</a>
         </div>
 
-        <!-- Tabel kalender -->
-        <table>
-            <thead>
-                <tr id="dayHeaders"></tr>
-            </thead>
-            <tbody id="calendarBody">
-            </tbody>
-        </table>
+        <!-- Canvas kalender -->
+        <canvas id="calendarCanvas" width="450" height="350"></canvas>
     </div>
 
     <script>
@@ -133,69 +80,106 @@
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
 
-        // Fungsi untuk membuat header hari
-        function createDayHeaders() {
-            const headerRow = document.getElementById('dayHeaders');
-            headerRow.innerHTML = '';
+        // Canvas dan context
+        const canvas = document.getElementById('calendarCanvas');
+        const ctx = canvas.getContext('2d');
 
-            indonesianDays.forEach(day => {
-                const th = document.createElement('th');
-                th.textContent = day;
-                headerRow.appendChild(th);
-            });
-        }
+        // Ukuran sel kalender
+        const cellWidth = canvas.width / 7; // 450 / 7 ≈ 64.3
+        const headerHeight = 50;
+        const cellHeight = 60;
 
-        // Fungsi untuk menghasilkan kalender
-        function generateCalendar(month, year) {
+        function drawCalendar() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update header
+            document.getElementById('monthYear').textContent = `${Months[currentMonth]} ${currentYear}`;
+
+            // Draw header hari
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, headerHeight);
+
+            // Draw border untuk header
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, canvas.width, headerHeight);
+
+            // Draw vertical lines untuk header
+            for (let i = 1; i < 7; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * cellWidth, 0);
+                ctx.lineTo(i * cellWidth, headerHeight);
+                ctx.stroke();
+            }
+
+            // Draw text header hari
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            for (let i = 0; i < 7; i++) {
+                ctx.fillText(indonesianDays[i], (i * cellWidth) + (cellWidth / 2), headerHeight / 2);
+            }
+
+            // Get first day of month and number of days
             const today = new Date();
-            const todayDate = today.getDate(); // Hanya ambil tanggal, bukan bulan/tahun
+            const todayDate = today.getDate();
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-            // Update header bulan dan tahun
-            document.getElementById('monthYear').textContent = `${Months[month]} ${year}`;
-
-            // Mendapatkan informasi bulan
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            const firstDayOfWeek = firstDay.getDay(); // 0 = Minggu
-
-            // Clear calendar body
-            const calendarBody = document.getElementById('calendarBody');
-            calendarBody.innerHTML = '';
-
-            let currentDate = 1;
-
-            // Hitung jumlah minggu yang diperlukan
-            const totalCells = firstDayOfWeek + daysInMonth;
+            let date = 1;
+            const totalCells = firstDay + daysInMonth;
             const totalWeeks = Math.ceil(totalCells / 7);
 
+            // Draw calendar grid and dates
             for (let week = 0; week < totalWeeks; week++) {
-                const row = document.createElement('tr');
+                for (let day = 0; day < 7; day++) {
+                    const x = day * cellWidth;
+                    const y = headerHeight + (week * cellHeight);
+                    const cellPosition = (week * 7) + day;
 
-                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-                    const cell = document.createElement('td');
-                    const cellPosition = (week * 7) + dayOfWeek;
+                    // Draw cell border
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x, y, cellWidth, cellHeight);
 
-                    if (cellPosition < firstDayOfWeek || currentDate > daysInMonth) {
-                        // Sel kosong untuk hari sebelum tanggal 1 atau setelah akhir bulan
-                        cell.className = 'empty-cell';
-                        cell.innerHTML = '';
+                    if (cellPosition < firstDay || date > daysInMonth) {
+                        ctx.fillStyle = '#f9f9f9';
+                        ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2);
                     } else {
-                        // Cek apakah tanggal ini sama dengan tanggal hari ini (tanpa peduli bulan/tahun)
-                        const isSameDate = (currentDate === todayDate);
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2);
+
+                        // Check if this is today's date (only date, not month/year)
+                        const isSameDate = (date === todayDate);
 
                         if (isSameDate) {
-                            cell.className = 'current-day-highlight';
+                            // Highlight today
+                            ctx.fillStyle = 'red';
+                            ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2);
                         }
 
-                        cell.textContent = currentDate;
-                        currentDate++;
-                    }
+                        // Draw date number
+                        ctx.font = '14px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
 
-                    row.appendChild(cell);
+                        if (isSameDate) {
+                            ctx.fillStyle = 'white';
+                            ctx.font = 'bold 14px Arial';
+                        } else {
+                            ctx.fillStyle = '#333';
+                            ctx.font = '14px Arial';
+                        }
+
+                        ctx.fillText(date, x + (cellWidth / 2), y + (cellHeight / 2));
+                        date++;
+                    }
                 }
 
-                calendarBody.appendChild(row);
+                if (date > daysInMonth) break;
             }
         }
 
@@ -206,7 +190,7 @@
                 currentMonth = 11;
                 currentYear--;
             }
-            generateCalendar(currentMonth, currentYear);
+            drawCalendar();
         });
 
         document.getElementById('nextMonth').addEventListener('click', function() {
@@ -215,12 +199,11 @@
                 currentMonth = 0;
                 currentYear++;
             }
-            generateCalendar(currentMonth, currentYear);
+            drawCalendar();
         });
 
         // Inisialisasi kalender
-        createDayHeaders();
-        generateCalendar(currentMonth, currentYear);
+        drawCalendar();
     </script>
 
 </body>
