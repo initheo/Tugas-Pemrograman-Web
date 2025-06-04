@@ -54,7 +54,6 @@ class AdminAuthController extends Controller
                 'message' => 'Login successful',
                 'redirect' => route('dashboard')
             ]);
-            
         }
 
 
@@ -66,6 +65,7 @@ class AdminAuthController extends Controller
 
     public function logout()
     {
+        Auth::guard('admin')->logout();
         Session::forget(['admin_id', 'admin_name', 'admin_role']);
         return redirect()->route('admin.login');
     }

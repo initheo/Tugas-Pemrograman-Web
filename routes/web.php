@@ -34,7 +34,7 @@ Route::middleware('auth.society')->group(function () {
 // Admin Routes (Validators & Officers)
 Route::prefix('admin')->group(function () {
 
-    Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
+    Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login')->middleware('redirect.if.authenticated:admin');
     Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
@@ -47,9 +47,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/validations/{id}', [ValidationManagementController::class, 'show'])->name('admin.validations.show');
         Route::post('/validations/{id}/assign', [ValidationManagementController::class, 'assign'])->name('admin.validations.assign');
 
-       
-        Route::post('/validations/{id}/update', [ValidationManagementController::class, 'update'])->name('admin.validations.update');
-       
-    });
 
+        Route::post('/validations/{id}/update', [ValidationManagementController::class, 'update'])->name('admin.validations.update');
+    });
 });
