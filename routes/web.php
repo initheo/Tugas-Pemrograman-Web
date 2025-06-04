@@ -33,11 +33,13 @@ Route::middleware('auth.society')->group(function () {
 
 // Admin Routes (Validators & Officers)
 Route::prefix('admin')->group(function () {
+
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
     Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('auth.admin')->group(function () {
+
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
         // Validation Management (for both validators and officers)
@@ -45,9 +47,9 @@ Route::prefix('admin')->group(function () {
         Route::get('/validations/{id}', [ValidationManagementController::class, 'show'])->name('admin.validations.show');
         Route::post('/validations/{id}/assign', [ValidationManagementController::class, 'assign'])->name('admin.validations.assign');
 
-        // Only validators can update validation status
-        Route::middleware('role:validator')->group(function () {
-            Route::post('/validations/{id}/update', [ValidationManagementController::class, 'update'])->name('admin.validations.update');
-        });
+       
+        Route::post('/validations/{id}/update', [ValidationManagementController::class, 'update'])->name('admin.validations.update');
+       
     });
+
 });

@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Session;
 class AdminDashboardController extends Controller
 {
     public function index()
-    {
+    { 
+ 
         $adminId = Session::get('admin_id');
         $adminRole = Session::get('admin_role');
 

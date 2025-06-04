@@ -77,7 +77,7 @@ return [
         ],
         'admins' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Admin::class, // Ganti dengan model yang sesuai
+            'model' => App\Models\User::class, // Ganti dengan model yang sesuai
         ],
     ],
 

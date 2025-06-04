@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Validator;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 
@@ -13,9 +15,6 @@ class AdminAuthController extends Controller
 {
     public function showLogin()
     {
-        if (Session::has('admin_id')) {
-            return redirect()->route('admin.dashboard');
-        }
         return view('admin.auth.login');
     }
 
@@ -28,20 +27,36 @@ class AdminAuthController extends Controller
 
         $user = User::where('username', $request->username)->first();
 
-        if ($user && Hash::check($request->password, $user->password)) {
-            $validator = Validator::where('user_id', $user->id)->first();
+        $credentials = [
+            'username' => $request->username,
+            'password' => $request->password,
+        ];
 
-            if ($validator) {
-                Session::put('admin_id', $user->id);
+        if (Auth::guard('admin')->attempt($credentials)) {
+            $request->session()->regenerate();
+
+            $admins = Auth::guard('admin')->user();
+
+            Log::info($admins);
+
+            $validator = Validator::where('user_id', $admins->id)->first();
+
+            Log::info($validator);
+
+            if ($admins) {
+                Session::put('admin_id', $admins->id);
                 Session::put('admin_name', $validator->name);
                 Session::put('admin_role', $validator->role);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Login successful'
-                ]);
             }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful',
+                'redirect' => route('dashboard')
+            ]);
+            
         }
+
 
         return response()->json([
             'success' => false,

@@ -148,7 +148,7 @@
             <!-- Actions -->
             <div class="px-4 py-5 bg-gray-50 sm:px-6">
                 @if($adminRole === 'validator' && $validation->status === 'pending')
-                    <form id="validationForm" class="space-y-6">
+                    <form id="validationForm" action="{{ route('admin.validations.update', $validation->id) }}" method="POST" class="space-y-6">
                         @csrf
                         <div>
                             <label for="status" class="block text-sm font-medium text-gray-700">Update Status</label>
@@ -170,7 +170,7 @@
                         </div>
                     </form>
                 @elseif($adminRole === 'officer' && !$validation->validator_id)
-                    <form id="assignForm" class="space-y-6">
+                    <form id="assignForm" action="{{ route('admin.validations.assign', $validation->id) }}" method="POST" class="space-y-6">
                         @csrf
                         <div>
                             <label for="validator_id" class="block text-sm font-medium text-gray-700">Assign Validator</label>
