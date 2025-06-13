@@ -18,16 +18,19 @@ Route::get('/', function () {
 });
 
 // Route not used ajax
-Route::resource('kontaks', KontakController::class); 
+Route::resource('kontaks', KontakController::class);
 Route::resource('users', UserController::class);
 Route::resource('events', EventController::class);
 Route::resource('employees', EmployeeController::class);
 Route::resource('tokos', TokoController::class);
-Route::resource('produks', ProdukController::class); 
+Route::resource('produks', ProdukController::class);
 
 // Route used ajax
 Route::resource('films', FilmController::class);
 Route::resource('notes', NoteController::class);
-Route::resource('hobis', HobiController::class);
 Route::resource('books', BookController::class);
 Route::resource('songs', SongController::class);
+ 
+ 
+Route::resource('hobis', HobiController::class);
+
