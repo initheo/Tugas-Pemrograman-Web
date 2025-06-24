@@ -27,14 +27,14 @@ class ValidationController extends Controller
         }
 
         $request->validate([
-            'job_category' => 'required|exists:job_categories,id',
+            'job_category_id' => 'required|exists:job_categories,id',
             'work_experience' => 'required',
             'job_position' => 'required',
             'reason_accepted' => 'required',
         ]);
 
         Validation::create([
-            'job_category_id' => $request->job_category,
+            'job_category_id' => $request->job_category_id,
             'society_id' => $society->id,
             'work_experience' => $request->work_experience,
             'job_position' => $request->job_position,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Society;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -17,10 +18,9 @@ class AuthController extends Controller
 
         $society = Society::with('regional')
             ->where('id_card_number', $request->id_card_number)
-            ->where('password', $request->password)
             ->first();
 
-        if ($society) {
+        if ($society && Hash::check($request->password, $society->password)) {
             $token = $society->generateToken();
             $society->update(['login_tokens' => $token]);
 

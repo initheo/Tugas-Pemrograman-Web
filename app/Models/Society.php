@@ -27,7 +27,6 @@ class Society extends Authenticatable
 
     protected $casts = [
         'born_date' => 'date',
-        'password' => 'hashed',
     ];
 
     public function regional()

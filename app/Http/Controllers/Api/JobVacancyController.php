@@ -18,6 +18,11 @@ class JobVacancyController extends Controller
             return response()->json(['message' => 'Unauthorized user'], 401);
         }
 
+        // Check if society has validation and it's accepted
+        if (!$society->validation) {
+            return response()->json(['message' => 'Your data validator must be accepted by validator before'], 400);
+        }
+
         $jobVacancies = JobVacancy::with(['jobCategory', 'availablePositions.jobApplyPositions'])
             ->where('job_category_id', $society->validation->job_category_id)
             ->get();
