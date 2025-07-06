@@ -65,13 +65,19 @@
             <thead>
               <tr class="text-sm font-medium text-left text-gray-600 border-b">
                 <th
-                  v-for="column in ['nama', 'nomorTelepon', 'alamatLengkap', 'tanggalLahir']"
+                  v-for="column in ['name', 'email', 'phone_number', 'address', 'city']"
                   :key="column"
                   class="pb-4 cursor-pointer select-none"
                   @click="toggleSort(column)"
                 >
                   <div class="flex items-center space-x-1">
-                    <span>{{ column === 'nama' ? 'Name' : column === 'nomorTelepon' ? 'Phone' : column === 'alamatLengkap' ? 'Address' : 'Birth Date' }}</span>
+                    <span>{{ 
+                      column === 'name' ? 'Name' : 
+                      column === 'email' ? 'Email' : 
+                      column === 'phone_number' ? 'Phone' : 
+                      column === 'address' ? 'Address' :
+                      column === 'city' ? 'City' : column 
+                    }}</span>
                     <svg
                       v-if="sortBy === column"
                       class="w-4 h-4"
@@ -92,23 +98,24 @@
                 v-if="customerStore.loading"
                 class="animate-pulse"
               >
-                <td colspan="4" class="py-4 text-center">Loading...</td>
+                <td colspan="6" class="py-4 text-center">Loading...</td>
               </tr>
               <tr
                 v-else-if="paginatedCustomers.length === 0"
                 class="border-t"
               >
-                <td colspan="4" class="py-4 text-center text-gray-500">No data found.</td>
+                <td colspan="6" class="py-4 text-center text-gray-500">No data found.</td>
               </tr>
               <tr
                 v-for="customer in paginatedCustomers"
                 :key="customer.id"
                 class="transition-colors border-t hover:bg-gray-50"
               >
-                <td class="py-4">{{ customer.nama }}</td>
-                <td>{{ customer.nomorTelepon }}</td>
-                <td>{{ customer.alamatLengkap }}</td>
-                <td>{{ customer.tanggalLahir }}</td>
+                <td class="py-4">{{ customer.name }}</td>
+                <td>{{ customer.email || 'N/A' }}</td>
+                <td>{{ customer.phone_number }}</td>
+                <td>{{ customer.address }}</td>
+                <td>{{ customer.city || 'N/A' }}</td>
                 <td class="flex items-center gap-2 py-4 space-x-2">
                   <!-- Table Actions -->
                   <button
@@ -197,11 +204,24 @@
                   Name
                 </label>
                 <input
-                  v-model="formData.nama"
+                  v-model="formData.name"
                   type="text"
                   required
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Enter customer name"
+                />
+              </div>
+
+              <!-- Email Field -->
+              <div>
+                <label class="block mb-2 text-sm font-bold text-gray-700">
+                  Email
+                </label>
+                <input
+                  v-model="formData.email"
+                  type="email"
+                  class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter email address (optional)"
                 />
               </div>
 
@@ -211,11 +231,10 @@
                   Phone Number
                 </label>
                 <input
-                  v-model="formData.nomorTelepon"
+                  v-model="formData.phone_number"
                   type="text"
-                  required
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter phone number"
+                  placeholder="Enter phone number (optional)"
                 />
               </div>
 
@@ -225,24 +244,36 @@
                   Address
                 </label>
                 <textarea
-                  v-model="formData.alamatLengkap"
+                  v-model="formData.address"
                   rows="3"
-                  required
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter complete address"
+                  placeholder="Enter complete address (optional)"
                 ></textarea>
               </div>
 
-              <!-- Birth Date Field -->
+              <!-- City Field -->
               <div>
                 <label class="block mb-2 text-sm font-bold text-gray-700">
-                  Birth Date
+                  City
                 </label>
                 <input
-                  v-model="formData.tanggalLahir"
-                  type="date"
-                  required
+                  v-model="formData.city"
+                  type="text"
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter city (optional)"
+                />
+              </div>
+
+              <!-- Postal Code Field -->
+              <div>
+                <label class="block mb-2 text-sm font-bold text-gray-700">
+                  Postal Code
+                </label>
+                <input
+                  v-model="formData.postal_code"
+                  type="text"
+                  class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter postal code (optional)"
                 />
               </div>
             </form>
@@ -287,15 +318,16 @@ export default {
     const selectedCustomer = ref(null)
     const searchQuery = ref('')
     const itemsPerPage = ref(10)
-    const sortBy = ref('nama')
+    const sortBy = ref('name')
     const sortDesc = ref(false)
     
     const formData = ref({
-      nama: '',
-      nomorTelepon: '',
-      alamatLengkap: '',
-      tanggalLahir: '',
-      agama: ''
+      name: '',
+      email: '',
+      phone_number: '',
+      address: '',
+      city: '',
+      postal_code: ''
     })
 
     // Computed properties
@@ -304,9 +336,11 @@ export default {
       if (!searchQuery.value) return customers
       
       return customers.filter(customer =>
-        customer.nama?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        customer.nomorTelepon?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        customer.alamatLengkap?.toLowerCase().includes(searchQuery.value.toLowerCase())
+        customer.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        customer.email?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        customer.phone_number?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        customer.address?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        customer.city?.toLowerCase().includes(searchQuery.value.toLowerCase())
       )
     })
 
@@ -348,11 +382,12 @@ export default {
         formData.value = { ...customer }
       } else {
         formData.value = {
-          nama: '',
-          nomorTelepon: '',
-          alamatLengkap: '',
-          tanggalLahir: '',
-          agama: ''
+          name: '',
+          email: '',
+          phone_number: '',
+          address: '',
+          city: '',
+          postal_code: ''
         }
       }
       showModal.value = true
@@ -362,11 +397,12 @@ export default {
       showModal.value = false
       selectedCustomer.value = null
       formData.value = {
-        nama: '',
-        nomorTelepon: '',
-        alamatLengkap: '',
-        tanggalLahir: '',
-        agama: ''
+        name: '',
+        email: '',
+        phone_number: '',
+        address: '',
+        city: '',
+        postal_code: ''
       }
     }
 
@@ -375,9 +411,11 @@ export default {
         if (selectedCustomer.value) {
           // Update existing customer
           await customerStore.updateCustomer(selectedCustomer.value.id, formData.value)
+          alert('Customer updated successfully!')
         } else {
           // Create new customer
           await customerStore.createCustomer(formData.value)
+          alert('Customer created successfully!')
         }
         closeModal()
       } catch (error) {
@@ -387,9 +425,10 @@ export default {
     }
 
     const handleDelete = async (customer) => {
-      if (confirm(`Are you sure you want to delete ${customer.nama}?`)) {
+      if (confirm(`Are you sure you want to delete ${customer.name}?`)) {
         try {
           await customerStore.deleteCustomer(customer.id)
+          alert('Customer deleted successfully!')
         } catch (error) {
           console.error('Error deleting customer:', error)
           alert('Error deleting customer: ' + error.message)
@@ -417,27 +456,30 @@ export default {
         customerStore.customers = [
           {
             id: 1,
-            nama: 'John Doe',
-            nomorTelepon: '081234567890',
-            alamatLengkap: 'Jl. Merdeka No. 123, Jakarta',
-            tanggalLahir: '1990-05-15',
-            agama: 'Islam'
+            name: 'John Doe',
+            email: 'john.doe@example.com',
+            phone_number: '081234567890',
+            address: 'Jl. Merdeka No. 123',
+            city: 'Jakarta',
+            postal_code: '12345'
           },
           {
             id: 2,
-            nama: 'Jane Smith',
-            nomorTelepon: '081987654321',
-            alamatLengkap: 'Jl. Sudirman No. 456, Bandung',
-            tanggalLahir: '1988-12-20',
-            agama: 'Kristen'
+            name: 'Jane Smith',
+            email: 'jane.smith@example.com',
+            phone_number: '081987654321',
+            address: 'Jl. Sudirman No. 456',
+            city: 'Bandung',
+            postal_code: '54321'
           },
           {
             id: 3,
-            nama: 'Bob Johnson',
-            nomorTelepon: '081122334455',
-            alamatLengkap: 'Jl. Gatot Subroto No. 789, Surabaya',
-            tanggalLahir: '1992-03-10',
-            agama: 'Katolik'
+            name: 'Bob Johnson',
+            email: 'bob.johnson@example.com',
+            phone_number: '081122334455',
+            address: 'Jl. Gatot Subroto No. 789',
+            city: 'Surabaya',
+            postal_code: '67890'
           }
         ]
         console.log('Using mock data for customers')
