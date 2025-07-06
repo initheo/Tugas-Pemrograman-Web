@@ -60,5 +60,54 @@ export const authService = {
     const user = localStorage.getItem('user')
     console.log('AuthService: Checking authentication:', { token: !!token, user: !!user })
     return !!(token && user)
+  },
+
+  // Update user profile
+  async updateProfile(profileData) {
+    try {
+      console.log('AuthService: Sending profile update request to backend')
+      const response = await api.put('/profile', profileData)
+      
+      console.log('AuthService: Profile update response received:', response.data)
+      
+      // Update localStorage with new user data
+      if (response.data.user || response.data.data) {
+        const userData = response.data.user || response.data.data
+        localStorage.setItem('user', JSON.stringify(userData))
+        console.log('AuthService: User data updated in localStorage')
+      }
+      
+      return response.data
+    } catch (error) {
+      console.error('AuthService: Profile update failed:', error.response?.data || error.message)
+      throw new Error(error.response?.data?.message || 'Failed to update profile')
+    }
+  },
+
+  // Change user password
+  async changePassword(passwordData) {
+    try {
+      console.log('AuthService: Sending password change request to backend')
+      const response = await api.put('/change-password', passwordData)
+      
+      console.log('AuthService: Password change response received:', response.data)
+      
+      return response.data
+    } catch (error) {
+      console.error('AuthService: Password change failed:', error.response?.data || error.message)
+      
+      // Handle validation errors specifically
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        const validationErrors = error.response.data.errors
+        if (validationErrors.current_password) {
+          throw new Error(validationErrors.current_password[0])
+        }
+        if (validationErrors.new_password) {
+          throw new Error(validationErrors.new_password[0])
+        }
+      }
+      
+      throw new Error(error.response?.data?.message || 'Failed to change password')
+    }
   }
 }

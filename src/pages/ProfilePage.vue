@@ -203,22 +203,21 @@ export default {
       success.value = ''
 
       try {
-        // Simulate API call - replace with actual API
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Update user in store (mock implementation)
-        if (authStore.currentUser) {
-          authStore.currentUser.name = form.value.name
-          // Update localStorage
-          localStorage.setItem('user', JSON.stringify(authStore.currentUser))
-        }
+        // Call API to update profile
+        const result = await authStore.updateProfile({
+          name: form.value.name
+        })
 
-        success.value = 'Profile updated successfully!'
-        
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          success.value = ''
-        }, 3000)
+        if (result.success) {
+          success.value = 'Profile updated successfully!'
+          
+          // Clear success message after 3 seconds
+          setTimeout(() => {
+            success.value = ''
+          }, 3000)
+        } else {
+          error.value = result.error || 'Failed to update profile'
+        }
 
       } catch (err) {
         error.value = err.message || 'Failed to update profile. Please try again.'

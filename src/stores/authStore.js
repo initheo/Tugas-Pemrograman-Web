@@ -117,22 +117,47 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
       
       try {
-        // Simulate API call - replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log('Updating profile with:', profileData)
+        const response = await authService.updateProfile(profileData)
         
-        // Update user data
-        this.user = { ...this.user, ...profileData }
+        console.log('Profile update response:', response)
         
-        // Update localStorage
-        localStorage.setItem('user', JSON.stringify(this.user))
+        // Update user data in store
+        if (response.user || response.data) {
+          this.user = response.user || response.data
+          // Update localStorage
+          localStorage.setItem('user', JSON.stringify(this.user))
+          console.log('Profile updated successfully:', this.user)
+        }
         
         this.loading = false
-        return { success: true }
+        return { success: true, data: response }
       } catch (error) {
-        console.error('Update profile error:', error)
+        console.error('Profile update error:', error)
         this.error = error.message
         this.loading = false
-        throw error
+        return { success: false, error: error.message }
+      }
+    },
+
+    // Change password
+    async changePassword(passwordData) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        console.log('Changing password...')
+        const response = await authService.changePassword(passwordData)
+        
+        console.log('Password change response:', response)
+        
+        this.loading = false
+        return { success: true, data: response }
+      } catch (error) {
+        console.error('Password change error:', error)
+        this.error = error.message
+        this.loading = false
+        return { success: false, error: error.message }
       }
     }
   }

@@ -11,6 +11,10 @@ Route::post('login', [ApiController::class, 'login']);
 Route::group(['middleware' => ['auth:sanctum']], function () { 
    
     Route::post('/logout', [ApiController::class, 'logout']);
+    
+    // Profile routes
+    Route::put('/profile', [ApiController::class, 'updateProfile']);
+    Route::put('/change-password', [ApiController::class, 'changePassword']);
 
     // Endpoint Untuk Customer
      Route::resource('customers', App\Http\Controllers\API\CustomerController::class);
