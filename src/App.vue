@@ -15,21 +15,30 @@
         <router-view />
       </main>
     </div>
+    
+    <!-- Debug component untuk development -->
+    <AuthDebug v-if="isDevelopment" />
   </div>
 </template>
 
 <script>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useAuthStore } from './stores/authStore'
 import Header from './components/Header.vue'
+import AuthDebug from './components/AuthDebug.vue'
 
 export default {
   name: 'App',
   components: {
-    Header
+    Header,
+    AuthDebug
   },
   setup() {
     const authStore = useAuthStore()
+
+    const isDevelopment = computed(() => {
+      return import.meta.env.DEV
+    })
 
     onMounted(() => {
       // Initialize auth state from localStorage
@@ -37,7 +46,8 @@ export default {
     })
 
     return {
-      authStore
+      authStore,
+      isDevelopment
     }
   }
 }

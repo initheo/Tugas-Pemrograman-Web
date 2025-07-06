@@ -58,9 +58,18 @@ export const useAuthStore = defineStore('auth', {
         
         console.log('Login response:', response)
         
-        this.user = response.user
-        this.token = response.token
-        this.isAuthenticated = true
+        // Handle response yang sesuai dengan Laravel Sanctum pattern
+        if (response.user || response.data) {
+          this.user = response.user || response.data
+          this.token = response.token || response['access-token']
+          this.isAuthenticated = true
+        } else {
+          // Fallback untuk struktur response lama
+          this.user = response.user
+          this.token = response.token
+          this.isAuthenticated = true
+        }
+        
         this.loading = false
         
         console.log('Auth state after login:', {
@@ -73,6 +82,7 @@ export const useAuthStore = defineStore('auth', {
         console.error('Login error:', error)
         this.error = error.message
         this.loading = false
+        this.clearAuthData()
         throw error
       }
     },

@@ -1,7 +1,7 @@
 import api from './api'
 
 export const authService = {
-  // Login user
+  // Login user (tidak perlu CSRF cookie untuk API token-based auth)
   async login(credentials) {
     try {
       console.log('AuthService: Sending login request to backend')
@@ -9,11 +9,25 @@ export const authService = {
       
       console.log('AuthService: Login response received:', response.data)
       
+      // Menyesuaikan dengan struktur response Laravel Sanctum dari contoh
+      if (response.data['access-token']) {
+        localStorage.setItem('auth_token', response.data['access-token'])
+        localStorage.setItem('user', JSON.stringify(response.data.data))
+        console.log('AuthService: Token and user data stored in localStorage')
+        
+        return {
+          token: response.data['access-token'],
+          user: response.data.data
+        }
+      }
+      
+      // Fallback untuk struktur response yang lama
       if (response.data.token) {
         localStorage.setItem('auth_token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
         console.log('AuthService: Token and user data stored in localStorage')
       }
+      
       return response.data
     } catch (error) {
       console.error('AuthService: Login failed:', error.response?.data || error.message)
