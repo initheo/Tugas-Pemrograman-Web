@@ -53,13 +53,18 @@
             <thead>
               <tr class="text-sm font-medium text-left text-gray-600 border-b">
                 <th
-                  v-for="column in ['namaCabang', 'kota', 'alamatLengkap']"
+                  v-for="column in ['name', 'city', 'address', 'phone_number']"
                   :key="column"
                   class="pb-4 cursor-pointer select-none"
                   @click="toggleSort(column)"
                 >
                   <div class="flex items-center space-x-1">
-                    <span>{{ column === 'namaCabang' ? 'Name' : column === 'kota' ? 'City' : 'Address' }}</span>
+                    <span>{{ 
+                      column === 'name' ? 'Branch Name' : 
+                      column === 'city' ? 'City' : 
+                      column === 'address' ? 'Address' :
+                      column === 'phone_number' ? 'Phone' : column 
+                    }}</span>
                     <svg
                       v-if="sortBy === column"
                       class="w-4 h-4"
@@ -80,22 +85,23 @@
                 v-if="branchStore.loading"
                 class="animate-pulse"
               >
-                <td colspan="4" class="py-4 text-center">Loading...</td>
+                <td colspan="5" class="py-4 text-center">Loading...</td>
               </tr>
               <tr
                 v-else-if="paginatedBranches.length === 0"
                 class="border-t"
               >
-                <td colspan="4" class="py-4 text-center text-gray-500">No branches found</td>
+                <td colspan="5" class="py-4 text-center text-gray-500">No branches found</td>
               </tr>
               <tr
                 v-for="branch in paginatedBranches"
                 :key="branch.id"
                 class="transition-colors border-t hover:bg-gray-50"
               >
-                <td class="py-4">{{ branch.namaCabang }}</td>
-                <td>{{ branch.kota }}</td>
-                <td>{{ branch.alamatLengkap }}</td>
+                <td class="py-4">{{ branch.name }}</td>
+                <td>{{ branch.city }}</td>
+                <td>{{ branch.address }}</td>
+                <td>{{ branch.phone_number || 'N/A' }}</td>
                 <td class="flex items-center gap-2 py-4 space-x-2">
                   <!-- Table Actions -->
                   <button
@@ -184,7 +190,7 @@
                   Branch Name
                 </label>
                 <input
-                  v-model="formData.namaCabang"
+                  v-model="formData.name"
                   type="text"
                   required
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -198,7 +204,7 @@
                   City
                 </label>
                 <input
-                  v-model="formData.kota"
+                  v-model="formData.city"
                   type="text"
                   required
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -212,12 +218,25 @@
                   Complete Address
                 </label>
                 <textarea
-                  v-model="formData.alamatLengkap"
+                  v-model="formData.address"
                   rows="3"
                   required
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Enter complete address"
                 ></textarea>
+              </div>
+
+              <!-- Phone Number Field -->
+              <div>
+                <label class="block mb-2 text-sm font-bold text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  v-model="formData.phone_number"
+                  type="tel"
+                  class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter phone number (optional)"
+                />
               </div>
             </form>
           </div>
@@ -261,13 +280,14 @@ export default {
     const selectedBranch = ref(null)
     const searchQuery = ref('')
     const itemsPerPage = ref(10)
-    const sortBy = ref('namaCabang')
+    const sortBy = ref('name')
     const sortDesc = ref(false)
     
     const formData = ref({
-      namaCabang: '',
-      kota: '',
-      alamatLengkap: ''
+      name: '',
+      city: '',
+      address: '',
+      phone_number: ''
     })
 
     // Computed properties
@@ -276,9 +296,10 @@ export default {
       if (!searchQuery.value) return branches
       
       return branches.filter(branch =>
-        branch.namaCabang?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        branch.kota?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        branch.alamatLengkap?.toLowerCase().includes(searchQuery.value.toLowerCase())
+        branch.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        branch.city?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        branch.address?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        branch.phone_number?.toLowerCase().includes(searchQuery.value.toLowerCase())
       )
     })
 
@@ -320,9 +341,10 @@ export default {
         formData.value = { ...branch }
       } else {
         formData.value = {
-          namaCabang: '',
-          kota: '',
-          alamatLengkap: ''
+          name: '',
+          city: '',
+          address: '',
+          phone_number: ''
         }
       }
       showModal.value = true
@@ -332,9 +354,10 @@ export default {
       showModal.value = false
       selectedBranch.value = null
       formData.value = {
-        namaCabang: '',
-        kota: '',
-        alamatLengkap: ''
+        name: '',
+        city: '',
+        address: '',
+        phone_number: ''
       }
     }
 
@@ -343,9 +366,11 @@ export default {
         if (selectedBranch.value) {
           // Update existing branch
           await branchStore.updateBranch(selectedBranch.value.id, formData.value)
+          alert('Branch updated successfully!')
         } else {
           // Create new branch
           await branchStore.createBranch(formData.value)
+          alert('Branch created successfully!')
         }
         closeModal()
       } catch (error) {
@@ -355,9 +380,10 @@ export default {
     }
 
     const handleDelete = async (branch) => {
-      if (confirm(`Are you sure you want to delete ${branch.namaCabang}?`)) {
+      if (confirm(`Are you sure you want to delete ${branch.name}?`)) {
         try {
           await branchStore.deleteBranch(branch.id)
+          alert('Branch deleted successfully!')
         } catch (error) {
           console.error('Error deleting branch:', error)
           alert('Error deleting branch: ' + error.message)
@@ -385,21 +411,24 @@ export default {
         branchStore.branches = [
           {
             id: 1,
-            namaCabang: 'Cabang Jakarta Pusat',
-            kota: 'Jakarta',
-            alamatLengkap: 'Jl. Sudirman No. 123, Jakarta Pusat'
+            name: 'Jakarta Central Branch',
+            city: 'Jakarta',
+            address: 'Jl. Sudirman No. 123, Jakarta Pusat',
+            phone_number: '+62-21-12345678'
           },
           {
             id: 2,
-            namaCabang: 'Cabang Bandung',
-            kota: 'Bandung',
-            alamatLengkap: 'Jl. Asia Afrika No. 456, Bandung'
+            name: 'Bandung Branch',
+            city: 'Bandung',
+            address: 'Jl. Asia Afrika No. 456, Bandung',
+            phone_number: '+62-22-87654321'
           },
           {
             id: 3,
-            namaCabang: 'Cabang Surabaya',
-            kota: 'Surabaya',
-            alamatLengkap: 'Jl. Pemuda No. 789, Surabaya'
+            name: 'Surabaya Branch',
+            city: 'Surabaya',
+            address: 'Jl. Pemuda No. 789, Surabaya',
+            phone_number: '+62-31-11223344'
           }
         ]
         console.log('Using mock data for branches')
