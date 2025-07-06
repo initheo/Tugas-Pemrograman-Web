@@ -62,13 +62,13 @@
             </thead>
             <tbody>
               <tr
-                v-if="transactionStore.loading"
+                v-if="transactionStore?.loading"
                 class="animate-pulse"
               >
                 <td colspan="8" class="py-4 text-center">Loading...</td>
               </tr>
               <tr
-                v-else-if="paginatedTransactions.length === 0"
+                v-else-if="(paginatedTransactions || []).length === 0"
                 class="border-t"
               >
                 <td colspan="8" class="py-4 text-center text-gray-500">No transactions found</td>
@@ -79,11 +79,11 @@
                 class="transition-colors border-t hover:bg-gray-50"
               >
                 <td class="py-4">
-                  {{ customerStore.customers.find(c => c.id === transaction.pelanggan.id)?.nama }}
+                  {{ (customerStore.customers || []).find(c => c.id === transaction.pelanggan?.id)?.nama || 'Unknown Customer' }}
                 </td>
                 <td>{{ new Date(transaction.tanggal).toLocaleDateString() }}</td>
                 <td>
-                  {{ branchStore.branches.find(b => b.id === transaction.kantor.id)?.namaCabang }}
+                  {{ (branchStore.branches || []).find(b => b.id === transaction.kantor?.id)?.namaCabang || 'Unknown Branch' }}
                 </td>
                 <td>{{ transaction.berat }} kg</td>
                 <td>Rp {{ transaction.totalNominal.toLocaleString() }}</td>
@@ -195,7 +195,7 @@
             <label for="customer" class="form-label">Customer</label>
             <select id="customer" v-model="form.customerId" required class="input-field">
               <option value="">Select Customer</option>
-              <option v-for="customer in customerStore.customers" :key="customer.id" :value="customer.id">
+              <option v-for="customer in (customerStore.customers || [])" :key="customer.id" :value="customer.id">
                 {{ customer.nama }}
               </option>
             </select>
@@ -205,7 +205,7 @@
             <label for="branch" class="form-label">Branch</label>
             <select id="branch" v-model="form.branchId" required class="input-field">
               <option value="">Select Branch</option>
-              <option v-for="branch in branchStore.branches" :key="branch.id" :value="branch.id">
+              <option v-for="branch in (branchStore.branches || [])" :key="branch.id" :value="branch.id">
                 {{ branch.namaCabang }}
               </option>
             </select>
@@ -268,3 +268,230 @@
     </div>
   </div>
 </template>
+
+<script>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useCustomerStore } from '../stores/customerStore'
+import { useBranchStore } from '../stores/branchStore'
+import { useVoucherStore } from '../stores/voucherStore'
+import { useTransactionStore } from '../stores/transactionStore'
+
+export default {
+  name: 'TransactionsPage',
+  setup() {
+    const customerStore = useCustomerStore()
+    const branchStore = useBranchStore()
+    const voucherStore = useVoucherStore()
+    const transactionStore = useTransactionStore()
+
+    // Reactive data
+    const showForm = ref(false)
+    const searchQuery = ref('')
+    const itemsPerPage = ref(10)
+    const currentPage = ref(1)
+    const voucherError = ref('')
+    const selectedVoucher = ref(null)
+
+    const form = ref({
+      customerId: '',
+      branchId: '',
+      weight: 0,
+      amount: 10000, // Default price per kg
+      paymentMethod: 'CASH',
+      paid: 0,
+      namaVoucher: '',
+      totalAmount: 0
+    })
+
+    // Computed properties
+    const filteredTransactions = computed(() => {
+      const transactions = transactionStore.transactions || []
+      if (!searchQuery.value) return transactions
+
+      return transactions.filter(transaction => {
+        const customer = customerStore.customers?.find(c => c.id === transaction.pelanggan?.id)
+        const branch = branchStore.branches?.find(b => b.id === transaction.kantor?.id)
+        
+        return (
+          customer?.nama?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          branch?.namaCabang?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          transaction.statusCucian?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          transaction.statusPembayaran?.toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+      })
+    })
+
+    const paginatedTransactions = computed(() => {
+      const transactions = filteredTransactions.value || []
+      const start = (currentPage.value - 1) * itemsPerPage.value
+      const end = start + itemsPerPage.value
+      return transactions.slice(start, end)
+    })
+
+    const totalPages = computed(() => {
+      const total = filteredTransactions.value?.length || 0
+      return Math.ceil(total / itemsPerPage.value)
+    })
+
+    const calculateTotal = computed(() => {
+      const subtotal = form.value.weight * form.value.amount
+      const discount = selectedVoucher.value ? (subtotal * selectedVoucher.value.diskonRate / 100) : 0
+      return subtotal - discount
+    })
+
+    // Watch for form changes to update total
+    watch([() => form.value.weight, () => form.value.amount, selectedVoucher], () => {
+      form.value.totalAmount = calculateTotal.value
+    }, { immediate: true })
+
+    // Methods
+    const validateVoucher = async () => {
+      voucherError.value = ''
+      selectedVoucher.value = null
+
+      if (!form.value.namaVoucher) {
+        voucherError.value = 'Please enter voucher code'
+        return
+      }
+
+      try {
+        const vouchers = voucherStore.vouchers || []
+        const voucher = vouchers.find(v => v.namaVoucher === form.value.namaVoucher && v.status === 'active')
+        
+        if (voucher) {
+          selectedVoucher.value = voucher
+        } else {
+          voucherError.value = 'Invalid or expired voucher code'
+        }
+      } catch (error) {
+        voucherError.value = 'Error validating voucher'
+        console.error('Voucher validation error:', error)
+      }
+    }
+
+    const submitForm = async () => {
+      try {
+        const transactionData = {
+          pelanggan: { id: form.value.customerId },
+          kantor: { id: form.value.branchId },
+          berat: form.value.weight,
+          totalNominal: form.value.totalAmount,
+          paymentMethod: form.value.paymentMethod,
+          paidAmount: form.value.paid,
+          voucher: selectedVoucher.value ? selectedVoucher.value.id : null
+        }
+
+        await transactionStore.createTransaction(transactionData)
+        
+        // Reset form
+        form.value = {
+          customerId: '',
+          branchId: '',
+          weight: 0,
+          amount: 10000,
+          paymentMethod: 'CASH',
+          paid: 0,
+          namaVoucher: '',
+          totalAmount: 0
+        }
+        selectedVoucher.value = null
+        voucherError.value = ''
+        showForm.value = false
+
+        alert('Transaction created successfully!')
+      } catch (error) {
+        console.error('Error creating transaction:', error)
+        alert('Error creating transaction: ' + error.message)
+      }
+    }
+
+    const loadData = async () => {
+      try {
+        await Promise.allSettled([
+          customerStore.fetchCustomers().catch(err => {
+            console.warn('Failed to load customers:', err)
+          }),
+          branchStore.fetchBranches().catch(err => {
+            console.warn('Failed to load branches:', err)
+          }),
+          voucherStore.fetchVouchers().catch(err => {
+            console.warn('Failed to load vouchers:', err)
+          }),
+          transactionStore.fetchTransactions().catch(err => {
+            console.warn('Failed to load transactions:', err)
+          })
+        ])
+      } catch (error) {
+        console.error('Error loading data:', error)
+      }
+    }
+
+    // Load data on component mount
+    onMounted(() => {
+      loadData()
+    })
+
+    return {
+      customerStore,
+      branchStore,
+      voucherStore,
+      transactionStore,
+      showForm,
+      searchQuery,
+      itemsPerPage,
+      currentPage,
+      totalPages,
+      form,
+      filteredTransactions,
+      paginatedTransactions,
+      voucherError,
+      selectedVoucher,
+      calculateTotal,
+      validateVoucher,
+      submitForm,
+      loadData
+    }
+  }
+}
+</script>
+
+<style scoped>
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-primary:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+</style>

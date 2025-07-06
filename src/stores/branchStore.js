@@ -24,11 +24,13 @@ export const useBranchStore = defineStore('branch', {
       
       try {
         const response = await branchService.getBranchStores()
-        this.branches = response.data || response
+        this.branches = response.data || response || []
         this.loading = false
       } catch (error) {
         this.error = error.message
+        this.branches = [] // Pastikan branches tetap array meskipun ada error
         this.loading = false
+        console.warn('Failed to fetch branches, setting empty array')
         throw error
       }
     },

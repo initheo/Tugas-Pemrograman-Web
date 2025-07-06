@@ -87,18 +87,25 @@ export default {
         authStore.clearError()
         console.log('LoginPage: Attempting login...')
         
-        const response = await authStore.login(form.value)
-        console.log('LoginPage: Login successful, response:', response)
+        const result = await authStore.login(form.value)
+        console.log('LoginPage: Login result:', result)
         
-        // Small delay to ensure state is updated
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        console.log('LoginPage: Auth state after login:', {
-          isAuthenticated: authStore.isAuthenticated,
-          user: authStore.currentUser
-        })
-        
-        router.push('/dashboard')
+        if (result.success) {
+          console.log('LoginPage: Login successful')
+          
+          // Small delay to ensure state is updated
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
+          console.log('LoginPage: Auth state after login:', {
+            isAuthenticated: authStore.isAuthenticated,
+            user: authStore.currentUser
+          })
+          
+          // Redirect ke dashboard
+          router.push('/dashboard')
+        } else {
+          console.error('LoginPage: Login failed:', result.error)
+        }
       } catch (error) {
         console.error('LoginPage: Login failed:', error)
       }

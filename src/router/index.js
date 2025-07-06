@@ -5,6 +5,8 @@ import CustomersPage from '../pages/CustomersPage.vue';
 import BranchesPage from '../pages/BranchesPage.vue';
 import VouchersPage from '../pages/VouchersPage.vue';
 import TransactionsPage from '../pages/TransactionsPage.vue';
+import ProfilePage from '../pages/ProfilePage.vue';
+import SettingsPage from '../pages/SettingsPage.vue';
 import LoginPage from '../pages/LoginPage.vue';
 import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
@@ -101,6 +103,18 @@ const router = createRouter({
       component: TransactionsPage,
       meta: { requiresAuth: true }
     },
+    {
+      path: '/profile',
+      name: 'Profile',
+      component: ProfilePage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: SettingsPage,
+      meta: { requiresAuth: true }
+    },
   ],
 });
 
@@ -126,7 +140,10 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !authStore.isAuthenticated) {
     console.log('Redirecting to login - auth required but not authenticated')
     // Redirect to login if authentication is required but user is not authenticated
-    next('/login');
+    next({ 
+      path: '/login',
+      query: { redirect: to.fullPath }
+    });
   } else if (requiresGuest && authStore.isAuthenticated) {
     console.log('Redirecting to dashboard - user already authenticated')
     // Redirect to dashboard if user is already authenticated and trying to access guest pages

@@ -261,28 +261,31 @@ export default {
     const selectedBranch = ref(null)
     const searchQuery = ref('')
     const itemsPerPage = ref(10)
-    const sortBy = ref('nama')
+    const sortBy = ref('namaCabang')
     const sortDesc = ref(false)
     
     const formData = ref({
-      nama: '',
-      alamat: '',
-      latitude: '',
-      longitude: ''
+      namaCabang: '',
+      kota: '',
+      alamatLengkap: ''
     })
 
     // Computed properties
     const filteredBranches = computed(() => {
-      if (!searchQuery.value) return branchStore.branches
+      const branches = branchStore.branches || []
+      if (!searchQuery.value) return branches
       
-      return branchStore.branches.filter(branch =>
-        branch.nama?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        branch.alamat?.toLowerCase().includes(searchQuery.value.toLowerCase())
+      return branches.filter(branch =>
+        branch.namaCabang?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        branch.kota?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        branch.alamatLengkap?.toLowerCase().includes(searchQuery.value.toLowerCase())
       )
     })
 
     const sortedBranches = computed(() => {
-      const branches = [...filteredBranches.value]
+      const branches = [...(filteredBranches.value || [])]
+      
+      if (branches.length === 0) return branches
       
       return branches.sort((a, b) => {
         const aValue = a[sortBy.value] || ''
@@ -297,9 +300,17 @@ export default {
     })
 
     const paginatedBranches = computed(() => {
-      const start = 0
-      const end = itemsPerPage.value
-      return sortedBranches.value.slice(start, end)
+      const branches = sortedBranches.value || []
+      const start = (currentPage.value - 1) * itemsPerPage.value
+      const end = start + itemsPerPage.value
+      return branches.slice(start, end)
+    })
+
+    const currentPage = ref(1)
+    
+    const totalPages = computed(() => {
+      const total = filteredBranches.value?.length || 0
+      return Math.ceil(total / itemsPerPage.value)
     })
 
     // Methods
@@ -309,10 +320,9 @@ export default {
         formData.value = { ...branch }
       } else {
         formData.value = {
-          nama: '',
-          alamat: '',
-          latitude: '',
-          longitude: ''
+          namaCabang: '',
+          kota: '',
+          alamatLengkap: ''
         }
       }
       showModal.value = true
@@ -322,10 +332,9 @@ export default {
       showModal.value = false
       selectedBranch.value = null
       formData.value = {
-        nama: '',
-        alamat: '',
-        latitude: '',
-        longitude: ''
+        namaCabang: '',
+        kota: '',
+        alamatLengkap: ''
       }
     }
 
@@ -346,7 +355,7 @@ export default {
     }
 
     const handleDelete = async (branch) => {
-      if (confirm(`Are you sure you want to delete ${branch.nama}?`)) {
+      if (confirm(`Are you sure you want to delete ${branch.namaCabang}?`)) {
         try {
           await branchStore.deleteBranch(branch.id)
         } catch (error) {
@@ -367,9 +376,33 @@ export default {
 
     const loadBranches = async () => {
       try {
+        console.log('Loading branches...')
         await branchStore.fetchBranches()
+        console.log('Branches loaded:', branchStore.branches)
       } catch (error) {
         console.error('Error loading branches:', error)
+        // Set branches ke mock data untuk development jika API gagal
+        branchStore.branches = [
+          {
+            id: 1,
+            namaCabang: 'Cabang Jakarta Pusat',
+            kota: 'Jakarta',
+            alamatLengkap: 'Jl. Sudirman No. 123, Jakarta Pusat'
+          },
+          {
+            id: 2,
+            namaCabang: 'Cabang Bandung',
+            kota: 'Bandung',
+            alamatLengkap: 'Jl. Asia Afrika No. 456, Bandung'
+          },
+          {
+            id: 3,
+            namaCabang: 'Cabang Surabaya',
+            kota: 'Surabaya',
+            alamatLengkap: 'Jl. Pemuda No. 789, Surabaya'
+          }
+        ]
+        console.log('Using mock data for branches')
       }
     }
 
@@ -387,7 +420,10 @@ export default {
       sortBy,
       sortDesc,
       formData,
+      filteredBranches,
       paginatedBranches,
+      currentPage,
+      totalPages,
       openModal,
       closeModal,
       handleSubmit,

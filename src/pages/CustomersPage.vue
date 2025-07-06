@@ -32,7 +32,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search branches..."
+              placeholder="Search customers..."
               class="py-2 pl-10 pr-4 border rounded-lg focus:ring-2 focus:ring-primary/50"
             />
             <svg
@@ -114,7 +114,7 @@
                   <button
                     @click="openModal(customer)"
                     class="p-2 text-blue-600 transition-colors duration-200 rounded-lg hover:bg-blue-100"
-                    title="Edit Branch"
+                    title="Edit Customer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -124,7 +124,7 @@
                   <button
                     @click="handleDelete(customer)"
                     class="p-2 text-red-600 transition-colors duration-200 rounded-lg hover:bg-red-100"
-                    title="Delete Branch"
+                    title="Delete Customer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -300,9 +300,10 @@ export default {
 
     // Computed properties
     const filteredCustomers = computed(() => {
-      if (!searchQuery.value) return customerStore.customers
+      const customers = customerStore.customers || []
+      if (!searchQuery.value) return customers
       
-      return customerStore.customers.filter(customer =>
+      return customers.filter(customer =>
         customer.nama?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         customer.nomorTelepon?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         customer.alamatLengkap?.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -310,7 +311,9 @@ export default {
     })
 
     const sortedCustomers = computed(() => {
-      const customers = [...filteredCustomers.value]
+      const customers = [...(filteredCustomers.value || [])]
+      
+      if (customers.length === 0) return customers
       
       return customers.sort((a, b) => {
         const aValue = a[sortBy.value] || ''
@@ -325,9 +328,17 @@ export default {
     })
 
     const paginatedCustomers = computed(() => {
-      const start = 0
-      const end = itemsPerPage.value
-      return sortedCustomers.value.slice(start, end)
+      const customers = sortedCustomers.value || []
+      const start = (currentPage.value - 1) * itemsPerPage.value
+      const end = start + itemsPerPage.value
+      return customers.slice(start, end)
+    })
+
+    const currentPage = ref(1)
+    
+    const totalPages = computed(() => {
+      const total = filteredCustomers.value?.length || 0
+      return Math.ceil(total / itemsPerPage.value)
     })
 
     // Methods
@@ -397,9 +408,39 @@ export default {
 
     const loadCustomers = async () => {
       try {
+        console.log('Loading customers...')
         await customerStore.fetchCustomers()
+        console.log('Customers loaded:', customerStore.customers)
       } catch (error) {
         console.error('Error loading customers:', error)
+        // Set customers ke mock data untuk development jika API gagal
+        customerStore.customers = [
+          {
+            id: 1,
+            nama: 'John Doe',
+            nomorTelepon: '081234567890',
+            alamatLengkap: 'Jl. Merdeka No. 123, Jakarta',
+            tanggalLahir: '1990-05-15',
+            agama: 'Islam'
+          },
+          {
+            id: 2,
+            nama: 'Jane Smith',
+            nomorTelepon: '081987654321',
+            alamatLengkap: 'Jl. Sudirman No. 456, Bandung',
+            tanggalLahir: '1988-12-20',
+            agama: 'Kristen'
+          },
+          {
+            id: 3,
+            nama: 'Bob Johnson',
+            nomorTelepon: '081122334455',
+            alamatLengkap: 'Jl. Gatot Subroto No. 789, Surabaya',
+            tanggalLahir: '1992-03-10',
+            agama: 'Katolik'
+          }
+        ]
+        console.log('Using mock data for customers')
       }
     }
 
@@ -417,7 +458,10 @@ export default {
       sortBy,
       sortDesc,
       formData,
+      filteredCustomers,
       paginatedCustomers,
+      currentPage,
+      totalPages,
       openModal,
       closeModal,
       handleSubmit,

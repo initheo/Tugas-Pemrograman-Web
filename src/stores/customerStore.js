@@ -24,11 +24,13 @@ export const useCustomerStore = defineStore('customer', {
       
       try {
         const response = await customerService.getCustomers()
-        this.customers = response.data || response
+        this.customers = response.data || response || []
         this.loading = false
       } catch (error) {
         this.error = error.message
+        this.customers = [] // Pastikan customers tetap array meskipun ada error
         this.loading = false
+        console.warn('Failed to fetch customers, setting empty array')
         throw error
       }
     },

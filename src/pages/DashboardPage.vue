@@ -139,9 +139,9 @@ export default {
 
     // Mock data for best customers and branches
     const topCustomers = ref([
-      { name: 'John Doe', totalSpent: 2500000, totalTransactions: 15 },
-      { name: 'Jane Smith', totalSpent: 1800000, totalTransactions: 12 },
-      { name: 'Bob Johnson', totalSpent: 1200000, totalTransactions: 8 }
+      { name: 'John Doe', totalAmount: 2500000, totalTransactions: 15 },
+      { name: 'Jane Smith', totalAmount: 1800000, totalTransactions: 12 },
+      { name: 'Bob Johnson', totalAmount: 1200000, totalTransactions: 8 }
     ])
 
     const topBranches = ref([
@@ -178,11 +178,30 @@ export default {
       error.value = null
 
       try {
-        await Promise.all([
-          customerStore.fetchCustomers(),
-          branchStore.fetchBranches(),
-          voucherStore.fetchVouchers()
-        ])
+        // Load data dengan error handling untuk setiap store
+        const promises = []
+        
+        // Hanya load jika store tersedia
+        if (customerStore?.fetchCustomers) {
+          promises.push(customerStore.fetchCustomers().catch(err => {
+            console.warn('Failed to load customers:', err)
+          }))
+        }
+        
+        if (branchStore?.fetchBranches) {
+          promises.push(branchStore.fetchBranches().catch(err => {
+            console.warn('Failed to load branches:', err)
+          }))
+        }
+        
+        if (voucherStore?.fetchVouchers) {
+          promises.push(voucherStore.fetchVouchers().catch(err => {
+            console.warn('Failed to load vouchers:', err)
+          }))
+        }
+        
+        await Promise.allSettled(promises)
+        
       } catch (err) {
         error.value = 'Failed to load dashboard data'
         console.error('Dashboard error:', err)
@@ -205,7 +224,10 @@ export default {
         return
       }
       
-      loadDashboardData()
+      // Load dashboard data setelah mount
+      setTimeout(() => {
+        loadDashboardData()
+      }, 100)
     })
 
     return {

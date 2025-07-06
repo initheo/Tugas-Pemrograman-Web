@@ -59,14 +59,19 @@ export const useAuthStore = defineStore('auth', {
         console.log('Login response:', response)
         
         // Handle response yang sesuai dengan Laravel Sanctum pattern
-        if (response.user || response.data) {
-          this.user = response.user || response.data
-          this.token = response.token || response['access-token']
+        if (response.user && response.token) {
+          this.user = response.user
+          this.token = response.token
+          this.isAuthenticated = true
+        } else if (response.data && response['access-token']) {
+          // Response dari repo referensi
+          this.user = response.data
+          this.token = response['access-token']
           this.isAuthenticated = true
         } else {
           // Fallback untuk struktur response lama
-          this.user = response.user
-          this.token = response.token
+          this.user = response.user || response.data
+          this.token = response.token || response['access-token']
           this.isAuthenticated = true
         }
         
@@ -77,13 +82,13 @@ export const useAuthStore = defineStore('auth', {
           isAuthenticated: this.isAuthenticated
         })
         
-        return response
+        return { success: true, data: response }
       } catch (error) {
         console.error('Login error:', error)
         this.error = error.message
         this.loading = false
         this.clearAuthData()
-        throw error
+        return { success: false, error: error.message }
       }
     },
 
@@ -104,6 +109,31 @@ export const useAuthStore = defineStore('auth', {
     // Clear error
     clearError() {
       this.error = null
+    },
+
+    // Update profile
+    async updateProfile(profileData) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        // Simulate API call - replace with actual API call
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Update user data
+        this.user = { ...this.user, ...profileData }
+        
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(this.user))
+        
+        this.loading = false
+        return { success: true }
+      } catch (error) {
+        console.error('Update profile error:', error)
+        this.error = error.message
+        this.loading = false
+        throw error
+      }
     }
   }
 })
