@@ -25,11 +25,13 @@ export const useVoucherStore = defineStore('voucher', {
       
       try {
         const response = await voucherService.getVouchers()
-        this.vouchers = response.data || response
+        this.vouchers = response.data || response || []
         this.loading = false
       } catch (error) {
         this.error = error.message
+        this.vouchers = [] // Pastikan vouchers tetap array meskipun ada error
         this.loading = false
+        console.warn('Failed to fetch vouchers, setting empty array')
         throw error
       }
     },
