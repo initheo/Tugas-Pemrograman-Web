@@ -272,3 +272,159 @@
 </div>
   </div>
 </template>
+
+<script>
+import { ref, computed, onMounted } from 'vue'
+import { useCustomerStore } from '../stores/customerStore'
+
+export default {
+  name: 'CustomersPage',
+  setup() {
+    const customerStore = useCustomerStore()
+    
+    // Reactive data
+    const showModal = ref(false)
+    const selectedCustomer = ref(null)
+    const searchQuery = ref('')
+    const itemsPerPage = ref(10)
+    const sortBy = ref('nama')
+    const sortDesc = ref(false)
+    
+    const formData = ref({
+      nama: '',
+      nomorTelepon: '',
+      alamatLengkap: '',
+      tanggalLahir: '',
+      agama: ''
+    })
+
+    // Computed properties
+    const filteredCustomers = computed(() => {
+      if (!searchQuery.value) return customerStore.customers
+      
+      return customerStore.customers.filter(customer =>
+        customer.nama?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        customer.nomorTelepon?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        customer.alamatLengkap?.toLowerCase().includes(searchQuery.value.toLowerCase())
+      )
+    })
+
+    const sortedCustomers = computed(() => {
+      const customers = [...filteredCustomers.value]
+      
+      return customers.sort((a, b) => {
+        const aValue = a[sortBy.value] || ''
+        const bValue = b[sortBy.value] || ''
+        
+        if (sortDesc.value) {
+          return bValue.localeCompare(aValue)
+        } else {
+          return aValue.localeCompare(bValue)
+        }
+      })
+    })
+
+    const paginatedCustomers = computed(() => {
+      const start = 0
+      const end = itemsPerPage.value
+      return sortedCustomers.value.slice(start, end)
+    })
+
+    // Methods
+    const openModal = (customer = null) => {
+      selectedCustomer.value = customer
+      if (customer) {
+        formData.value = { ...customer }
+      } else {
+        formData.value = {
+          nama: '',
+          nomorTelepon: '',
+          alamatLengkap: '',
+          tanggalLahir: '',
+          agama: ''
+        }
+      }
+      showModal.value = true
+    }
+
+    const closeModal = () => {
+      showModal.value = false
+      selectedCustomer.value = null
+      formData.value = {
+        nama: '',
+        nomorTelepon: '',
+        alamatLengkap: '',
+        tanggalLahir: '',
+        agama: ''
+      }
+    }
+
+    const handleSubmit = async () => {
+      try {
+        if (selectedCustomer.value) {
+          // Update existing customer
+          await customerStore.updateCustomer(selectedCustomer.value.id, formData.value)
+        } else {
+          // Create new customer
+          await customerStore.createCustomer(formData.value)
+        }
+        closeModal()
+      } catch (error) {
+        console.error('Error saving customer:', error)
+        alert('Error saving customer: ' + error.message)
+      }
+    }
+
+    const handleDelete = async (customer) => {
+      if (confirm(`Are you sure you want to delete ${customer.nama}?`)) {
+        try {
+          await customerStore.deleteCustomer(customer.id)
+        } catch (error) {
+          console.error('Error deleting customer:', error)
+          alert('Error deleting customer: ' + error.message)
+        }
+      }
+    }
+
+    const toggleSort = (column) => {
+      if (sortBy.value === column) {
+        sortDesc.value = !sortDesc.value
+      } else {
+        sortBy.value = column
+        sortDesc.value = false
+      }
+    }
+
+    const loadCustomers = async () => {
+      try {
+        await customerStore.fetchCustomers()
+      } catch (error) {
+        console.error('Error loading customers:', error)
+      }
+    }
+
+    // Load customers on component mount
+    onMounted(() => {
+      loadCustomers()
+    })
+
+    return {
+      customerStore,
+      showModal,
+      selectedCustomer,
+      searchQuery,
+      itemsPerPage,
+      sortBy,
+      sortDesc,
+      formData,
+      paginatedCustomers,
+      openModal,
+      closeModal,
+      handleSubmit,
+      handleDelete,
+      toggleSort,
+      loadCustomers
+    }
+  }
+}
+</script>

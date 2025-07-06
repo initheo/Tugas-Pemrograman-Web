@@ -6,18 +6,24 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:backend": "cd backend-apps && php artisan serve",
+    "dev:full": "concurrently \"npm run dev:backend\" \"npm run dev\"",
+    "install:backend": "cd backend-apps && composer install"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
+    "axios": "^1.6.2",
     "leaflet": "^1.9.4",
+    "pinia": "^2.1.7",
     "vue": "^3.3.8",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.0",
     "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5",
     "vite": "^5.0.0"

@@ -40,3 +40,68 @@
     </button>
   </form>
 </template>
+
+<script>
+import { ref, watch } from 'vue'
+import { useVoucherStore } from '../stores/voucherStore'
+
+export default {
+  name: 'VoucherForm',
+  props: {
+    voucher: {
+      type: Object,
+      default: null
+    },
+    mode: {
+      type: String,
+      default: 'create'
+    }
+  },
+  emits: ['submit'],
+  setup(props, { emit }) {
+    const voucherStore = useVoucherStore()
+    
+    const form = ref({
+      namaVoucher: '',
+      diskonRate: 0,
+      tanggalExpired: ''
+    })
+
+    // Watch for prop changes to populate form
+    watch(() => props.voucher, (newVoucher) => {
+      if (newVoucher) {
+        form.value = {
+          namaVoucher: newVoucher.namaVoucher || '',
+          diskonRate: newVoucher.diskonRate || 0,
+          tanggalExpired: newVoucher.tanggalExpired || ''
+        }
+      } else {
+        form.value = {
+          namaVoucher: '',
+          diskonRate: 0,
+          tanggalExpired: ''
+        }
+      }
+    }, { immediate: true })
+
+    const submitForm = async () => {
+      try {
+        if (props.mode === 'edit' && props.voucher) {
+          await voucherStore.updateVoucher(props.voucher.id, form.value)
+        } else {
+          await voucherStore.createVoucher(form.value)
+        }
+        emit('submit')
+      } catch (error) {
+        console.error('Error saving voucher:', error)
+        alert('Error saving voucher: ' + error.message)
+      }
+    }
+
+    return {
+      form,
+      submitForm
+    }
+  }
+}
+</script>

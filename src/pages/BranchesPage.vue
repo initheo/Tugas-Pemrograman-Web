@@ -246,3 +246,155 @@
 </div>
   </div>
 </template>
+
+<script>
+import { ref, computed, onMounted } from 'vue'
+import { useBranchStore } from '../stores/branchStore'
+
+export default {
+  name: 'BranchesPage',
+  setup() {
+    const branchStore = useBranchStore()
+    
+    // Reactive data
+    const showModal = ref(false)
+    const selectedBranch = ref(null)
+    const searchQuery = ref('')
+    const itemsPerPage = ref(10)
+    const sortBy = ref('nama')
+    const sortDesc = ref(false)
+    
+    const formData = ref({
+      nama: '',
+      alamat: '',
+      latitude: '',
+      longitude: ''
+    })
+
+    // Computed properties
+    const filteredBranches = computed(() => {
+      if (!searchQuery.value) return branchStore.branches
+      
+      return branchStore.branches.filter(branch =>
+        branch.nama?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        branch.alamat?.toLowerCase().includes(searchQuery.value.toLowerCase())
+      )
+    })
+
+    const sortedBranches = computed(() => {
+      const branches = [...filteredBranches.value]
+      
+      return branches.sort((a, b) => {
+        const aValue = a[sortBy.value] || ''
+        const bValue = b[sortBy.value] || ''
+        
+        if (sortDesc.value) {
+          return bValue.localeCompare(aValue)
+        } else {
+          return aValue.localeCompare(bValue)
+        }
+      })
+    })
+
+    const paginatedBranches = computed(() => {
+      const start = 0
+      const end = itemsPerPage.value
+      return sortedBranches.value.slice(start, end)
+    })
+
+    // Methods
+    const openModal = (branch = null) => {
+      selectedBranch.value = branch
+      if (branch) {
+        formData.value = { ...branch }
+      } else {
+        formData.value = {
+          nama: '',
+          alamat: '',
+          latitude: '',
+          longitude: ''
+        }
+      }
+      showModal.value = true
+    }
+
+    const closeModal = () => {
+      showModal.value = false
+      selectedBranch.value = null
+      formData.value = {
+        nama: '',
+        alamat: '',
+        latitude: '',
+        longitude: ''
+      }
+    }
+
+    const handleSubmit = async () => {
+      try {
+        if (selectedBranch.value) {
+          // Update existing branch
+          await branchStore.updateBranch(selectedBranch.value.id, formData.value)
+        } else {
+          // Create new branch
+          await branchStore.createBranch(formData.value)
+        }
+        closeModal()
+      } catch (error) {
+        console.error('Error saving branch:', error)
+        alert('Error saving branch: ' + error.message)
+      }
+    }
+
+    const handleDelete = async (branch) => {
+      if (confirm(`Are you sure you want to delete ${branch.nama}?`)) {
+        try {
+          await branchStore.deleteBranch(branch.id)
+        } catch (error) {
+          console.error('Error deleting branch:', error)
+          alert('Error deleting branch: ' + error.message)
+        }
+      }
+    }
+
+    const toggleSort = (column) => {
+      if (sortBy.value === column) {
+        sortDesc.value = !sortDesc.value
+      } else {
+        sortBy.value = column
+        sortDesc.value = false
+      }
+    }
+
+    const loadBranches = async () => {
+      try {
+        await branchStore.fetchBranches()
+      } catch (error) {
+        console.error('Error loading branches:', error)
+      }
+    }
+
+    // Load branches on component mount
+    onMounted(() => {
+      loadBranches()
+    })
+
+    return {
+      branchStore,
+      showModal,
+      selectedBranch,
+      searchQuery,
+      itemsPerPage,
+      sortBy,
+      sortDesc,
+      formData,
+      paginatedBranches,
+      openModal,
+      closeModal,
+      handleSubmit,
+      handleDelete,
+      toggleSort,
+      loadBranches
+    }
+  }
+}
+</script>

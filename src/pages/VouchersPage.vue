@@ -84,3 +84,67 @@
     </div>
   </div>
 </template>
+
+<script>
+import { ref, onMounted } from 'vue'
+import { useVoucherStore } from '../stores/voucherStore'
+import VoucherForm from '../components/VoucherForm.vue'
+
+export default {
+  name: 'VouchersPage',
+  components: {
+    VoucherForm
+  },
+  setup() {
+    const voucherStore = useVoucherStore()
+    
+    // Reactive data
+    const showForm = ref(false)
+    const selectedVoucher = ref(null)
+    const formMode = ref('create')
+
+    // Methods
+    const openCreateForm = () => {
+      selectedVoucher.value = null
+      formMode.value = 'create'
+      showForm.value = true
+    }
+
+    const openEditForm = (voucher) => {
+      selectedVoucher.value = voucher
+      formMode.value = 'edit'
+      showForm.value = true
+    }
+
+    const closeForm = () => {
+      showForm.value = false
+      selectedVoucher.value = null
+      formMode.value = 'create'
+    }
+
+    const loadVouchers = async () => {
+      try {
+        await voucherStore.fetchVouchers()
+      } catch (error) {
+        console.error('Error loading vouchers:', error)
+      }
+    }
+
+    // Load vouchers on component mount
+    onMounted(() => {
+      loadVouchers()
+    })
+
+    return {
+      voucherStore,
+      showForm,
+      selectedVoucher,
+      formMode,
+      openCreateForm,
+      openEditForm,
+      closeForm,
+      loadVouchers
+    }
+  }
+}
+</script>
