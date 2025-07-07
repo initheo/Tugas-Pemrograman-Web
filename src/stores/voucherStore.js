@@ -24,15 +24,34 @@ export const useVoucherStore = defineStore('voucher', {
       this.error = null
       
       try {
+        console.log('Fetching vouchers from API...')
         const response = await voucherService.getVouchers()
-        this.vouchers = response.data || response || []
+        console.log('Raw API response:', response)
+        
+        // Handle different response structures
+        let vouchersData = response.data || response || []
+        
+        // If the response has a nested data property (like your Postman response)
+        if (response.data && Array.isArray(response.data.data)) {
+          vouchersData = response.data.data
+        } else if (response.data && Array.isArray(response.data)) {
+          vouchersData = response.data
+        } else if (Array.isArray(response)) {
+          vouchersData = response
+        }
+        
+        this.vouchers = vouchersData
+        console.log('Vouchers processed and stored:', this.vouchers.length, this.vouchers)
         this.loading = false
       } catch (error) {
         this.error = error.message
-        this.vouchers = [] // Pastikan vouchers tetap array meskipun ada error
         this.loading = false
-        console.warn('Failed to fetch vouchers, setting empty array')
-        throw error
+        console.error('Failed to fetch vouchers from API:', error.message)
+        console.error('Full error:', error)
+        
+        // Fallback data for development - hapus ini jika tidak perlu
+        this.vouchers = []
+        console.log('Using empty fallback voucher array')
       }
     },
 
@@ -61,12 +80,16 @@ export const useVoucherStore = defineStore('voucher', {
       try {
         const response = await voucherService.createVoucher(voucherData)
         const newVoucher = response.data || response
-        this.vouchers.push(newVoucher)
+        
+        // Add to local state
+        this.vouchers.unshift(newVoucher)
         this.loading = false
+        console.log('Voucher created successfully:', newVoucher)
         return newVoucher
       } catch (error) {
         this.error = error.message
         this.loading = false
+        console.error('Failed to create voucher:', error.message)
         throw error
       }
     },
@@ -80,16 +103,19 @@ export const useVoucherStore = defineStore('voucher', {
         const response = await voucherService.updateVoucher(id, voucherData)
         const updatedVoucher = response.data || response
         
-        const index = this.vouchers.findIndex(voucher => voucher.id === id)
+        // Update in local state
+        const index = this.vouchers.findIndex(voucher => voucher.id === parseInt(id))
         if (index !== -1) {
           this.vouchers[index] = updatedVoucher
         }
         
         this.loading = false
+        console.log('Voucher updated successfully:', updatedVoucher)
         return updatedVoucher
       } catch (error) {
         this.error = error.message
         this.loading = false
+        console.error('Failed to update voucher:', error.message)
         throw error
       }
     },
@@ -101,11 +127,15 @@ export const useVoucherStore = defineStore('voucher', {
       
       try {
         await voucherService.deleteVoucher(id)
-        this.vouchers = this.vouchers.filter(voucher => voucher.id !== id)
+        
+        // Remove from local state
+        this.vouchers = this.vouchers.filter(voucher => voucher.id !== parseInt(id))
         this.loading = false
+        console.log('Voucher deleted successfully')
       } catch (error) {
         this.error = error.message
         this.loading = false
+        console.error('Failed to delete voucher:', error.message)
         throw error
       }
     },

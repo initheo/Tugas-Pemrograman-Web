@@ -90,27 +90,53 @@
                 :key="voucher.id" 
                 :value="voucher.id"
               >
-                {{ voucher.name }} - 
-                <span v-if="voucher.discount_type === 'percentage'">
-                  {{ voucher.discount_percentage || voucher.discount_value }}% off
+                {{ voucher.name }}{{ voucher.code ? ` (${voucher.code})` : '' }} - 
+                <span v-if="voucher.discount_type === 'percentage' || !voucher.discount_type">
+                  {{ voucher.discount_percentage }}% off
                 </span>
                 <span v-else>
-                  Rp {{ (voucher.discount_value || voucher.discount_percentage || 0).toLocaleString() }} off
+                  Rp {{ Number(voucher.discount_value || voucher.discount_percentage || 0).toLocaleString() }} off
                 </span>
-                <span v-if="voucher.minimum_purchase > 0">
-                  (Min. Rp {{ voucher.minimum_purchase.toLocaleString() }})
+                <span v-if="voucher.minimum_purchase && voucher.minimum_purchase > 0">
+                  (Min. Rp {{ Number(voucher.minimum_purchase).toLocaleString() }})
+                </span>
+                <span v-if="voucher.maximum_discount && voucher.maximum_discount > 0 && (voucher.discount_type === 'percentage' || !voucher.discount_type)">
+                  (Max. Rp {{ Number(voucher.maximum_discount).toLocaleString() }})
                 </span>
               </option>
             </select>
+            
+            <!-- Debug info -->
+            <div v-if="voucherStore.loading" class="text-sm text-blue-500">
+              Loading vouchers...
+            </div>
+            <div v-else-if="voucherStore.error" class="text-sm text-red-500">
+              Error loading vouchers: {{ voucherStore.error }}
+            </div>
+            <div v-else-if="!vouchers || vouchers.length === 0" class="text-sm text-gray-500">
+              No vouchers available in database
+            </div>
+            <div v-else-if="availableVouchers.length === 0 && form.base_amount > 0" class="text-sm text-orange-600">
+              {{ vouchers.length }} vouchers found, but none meet the minimum purchase requirement of Rp {{ form.base_amount.toLocaleString() }}
+            </div>
+            <div v-else-if="vouchers.length > 0" class="text-sm text-green-600">
+              {{ vouchers.length }} vouchers loaded, {{ availableVouchers.length }} available for current amount
+            </div>
             <div v-if="selectedVoucher" class="p-3 bg-green-50 border border-green-200 rounded-lg">
               <p class="text-sm text-green-700">
                 <span class="font-medium">{{ selectedVoucher.name }}</span> applied!
-                <span v-if="selectedVoucher.discount_type === 'percentage'">
-                  {{ selectedVoucher.discount_percentage || selectedVoucher.discount_value }}% discount
+                <span v-if="selectedVoucher.discount_type === 'percentage' || !selectedVoucher.discount_type">
+                  {{ selectedVoucher.discount_percentage }}% discount
+                  <span v-if="selectedVoucher.maximum_discount && selectedVoucher.maximum_discount > 0">
+                    (max Rp {{ Number(selectedVoucher.maximum_discount).toLocaleString() }})
+                  </span>
                 </span>
                 <span v-else>
-                  Rp {{ (selectedVoucher.discount_value || selectedVoucher.discount_percentage || 0).toLocaleString() }} discount
+                  Rp {{ Number(selectedVoucher.discount_value || selectedVoucher.discount_percentage).toLocaleString() }} discount
                 </span>
+              </p>
+              <p v-if="discountAmount > 0" class="text-xs text-green-600 mt-1">
+                You save: Rp {{ Number(discountAmount).toLocaleString() }}
               </p>
             </div>
           </div>
@@ -262,14 +288,61 @@ export default {
     // Computed properties
     const customers = computed(() => customerStore.customers || [])
     const branches = computed(() => branchStore.branches || [])
-    const vouchers = computed(() => voucherStore.vouchers || [])
+    const vouchers = computed(() => {
+      const result = voucherStore.vouchers || []
+      console.log('Computed vouchers - Raw store data:', result)
+      console.log('Store state:', { 
+        vouchers: voucherStore.vouchers, 
+        loading: voucherStore.loading, 
+        error: voucherStore.error 
+      })
+      return result
+    })
     
     const availableVouchers = computed(() => {
-      return vouchers.value.filter(voucher => 
-        voucher.status === 'active' && 
-        new Date(voucher.valid_until) >= new Date() &&
-        (voucher.minimum_purchase === 0 || form.value.base_amount >= voucher.minimum_purchase)
-      )
+      const allVouchers = vouchers.value || []
+      console.log('All vouchers for filtering:', allVouchers)
+      
+      if (!allVouchers.length) {
+        console.log('No vouchers available')
+        return []
+      }
+      
+      const filtered = allVouchers.filter(voucher => {
+        console.log('Checking voucher:', voucher)
+        
+        // Check if voucher is active (jika field status ada)
+        if (voucher.status && voucher.status !== 'active') {
+          console.log('Voucher not active:', voucher.status)
+          return false
+        }
+        
+        // Check if voucher is still valid
+        const today = new Date()
+        const validFrom = voucher.valid_from ? new Date(voucher.valid_from) : null
+        const validUntil = voucher.valid_until ? new Date(voucher.valid_until) : null
+        
+        if (validFrom && today < validFrom) {
+          console.log('Voucher not yet valid:', validFrom)
+          return false
+        }
+        if (validUntil && today > validUntil) {
+          console.log('Voucher expired:', validUntil)
+          return false
+        }
+        
+        // Check minimum purchase requirement (jika ada)
+        const baseAmount = form.value.base_amount || 0
+        if (voucher.minimum_purchase && baseAmount > 0 && baseAmount < voucher.minimum_purchase) {
+          console.log('Base amount too low:', baseAmount, 'required:', voucher.minimum_purchase)
+          return false
+        }
+        
+        console.log('Voucher passed all checks')
+        return true
+      })
+      console.log('Available vouchers after filtering:', filtered)
+      return filtered
     })
 
     // Methods
@@ -286,16 +359,31 @@ export default {
       const baseAmount = form.value.base_amount || 0
       let discount = 0
 
+      console.log('Calculating total - Base amount:', baseAmount, 'Selected voucher:', selectedVoucher.value)
+
       if (selectedVoucher.value && baseAmount >= (selectedVoucher.value.minimum_purchase || 0)) {
-        if (selectedVoucher.value.discount_type === 'percentage') {
-          discount = Math.floor(baseAmount * (selectedVoucher.value.discount_percentage || selectedVoucher.value.discount_value || 0) / 100)
-        } else {
-          discount = selectedVoucher.value.discount_value || selectedVoucher.value.discount_percentage || 0
+        const voucher = selectedVoucher.value
+        console.log('Applying voucher:', voucher)
+        
+        // Karena dari API hanya ada discount_percentage, anggap semua voucher adalah percentage discount
+        if (voucher.discount_type === 'percentage' || !voucher.discount_type) {
+          // Untuk percentage, gunakan discount_percentage
+          const percentage = voucher.discount_percentage || 0
+          discount = Math.floor(baseAmount * percentage / 100)
+          console.log(`Percentage discount: ${percentage}% of ${baseAmount} = ${discount}`)
+        } else if (voucher.discount_type === 'fixed') {
+          // Untuk fixed amount, gunakan discount_value
+          discount = voucher.discount_value || 0
+          console.log(`Fixed discount: ${discount}`)
         }
         
         // Apply maximum discount if set
-        if (selectedVoucher.value.maximum_discount && selectedVoucher.value.maximum_discount > 0) {
-          discount = Math.min(discount, selectedVoucher.value.maximum_discount)
+        if (voucher.maximum_discount && voucher.maximum_discount > 0) {
+          const originalDiscount = discount
+          discount = Math.min(discount, voucher.maximum_discount)
+          if (originalDiscount !== discount) {
+            console.log(`Discount capped: ${originalDiscount} -> ${discount} (max: ${voucher.maximum_discount})`)
+          }
         }
         
         // Ensure discount doesn't exceed base amount
@@ -303,7 +391,10 @@ export default {
       }
 
       discountAmount.value = discount
-      form.value.total_amount = baseAmount - discount
+      const totalAmount = Math.max(0, baseAmount - discount)
+      form.value.total_amount = totalAmount
+      
+      console.log('Final calculation:', { baseAmount, discount, totalAmount })
     }
 
     const validateForm = () => {
@@ -322,6 +413,10 @@ export default {
         errors.value.base_amount = 'Base amount must be greater than 0'
       }
 
+      if (!form.value.payment_method) {
+        errors.value.payment_method = 'Payment method is required'
+      }
+
       return Object.keys(errors.value).length === 0
     }
 
@@ -332,10 +427,11 @@ export default {
 
       const transactionData = {
         ...form.value,
-        voucher_id: selectedVoucherId.value || null,
+        voucher_id: selectedVoucherId.value ? parseInt(selectedVoucherId.value) : null,
         discount_amount: discountAmount.value
       }
 
+      console.log('Submitting transaction data:', transactionData)
       emit('submit', transactionData)
     }
 
@@ -357,11 +453,23 @@ export default {
     // Load data and initialize form
     onMounted(async () => {
       try {
-        await Promise.allSettled([
+        console.log('Loading form data...')
+        const results = await Promise.allSettled([
           customerStore.fetchCustomers(),
           branchStore.fetchBranches(),
           voucherStore.fetchVouchers()
         ])
+        
+        results.forEach((result, index) => {
+          const names = ['customers', 'branches', 'vouchers']
+          if (result.status === 'rejected') {
+            console.error(`Failed to load ${names[index]}:`, result.reason)
+          } else {
+            console.log(`Successfully loaded ${names[index]}`)
+          }
+        })
+        
+        console.log('Final vouchers in store:', voucherStore.vouchers?.length || 0)
       } catch (error) {
         console.warn('Some data failed to load:', error)
       }
@@ -379,7 +487,9 @@ export default {
       errors,
       customers,
       branches,
+      vouchers,
       availableVouchers,
+      voucherStore, // Add store access for template
       applyVoucher,
       calculateTotal,
       submitForm,

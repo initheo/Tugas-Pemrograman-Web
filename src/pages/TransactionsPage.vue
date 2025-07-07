@@ -262,6 +262,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useTransactionStore } from '../stores/transactionStore'
 import { useCustomerStore } from '../stores/customerStore'
 import { useBranchStore } from '../stores/branchStore'
+import { useVoucherStore } from '../stores/voucherStore'
 import TransactionForm from '../components/TransactionForm.vue'
 
 export default {
@@ -273,6 +274,7 @@ export default {
     const transactionStore = useTransactionStore()
     const customerStore = useCustomerStore()
     const branchStore = useBranchStore()
+    const voucherStore = useVoucherStore()
 
     // Reactive data
     const showForm = ref(false)
@@ -399,7 +401,8 @@ export default {
         await Promise.allSettled([
           transactionStore.fetchTransactions(),
           customerStore.fetchCustomers(),
-          branchStore.fetchBranches()
+          branchStore.fetchBranches(),
+          voucherStore.fetchVouchers()
         ])
       } catch (error) {
         console.error('Error loading data:', error)
@@ -415,6 +418,7 @@ export default {
       transactionStore,
       customerStore,
       branchStore,
+      voucherStore,
       showForm,
       showDeleteConfirm,
       transactionToDelete,
