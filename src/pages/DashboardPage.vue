@@ -66,11 +66,11 @@
               <tr
                 v-else
                 v-for="customer in topCustomers"
-                :key="customer.name"
+                :key="customer.name || customer.id"
                 class="border-t"
               >
                 <td class="py-4">{{ customer.name }}</td>
-                <td>Rp {{ customer.totalAmount.toLocaleString() }}</td>
+                <td>Rp {{ Number(customer.totalAmount || 0).toLocaleString() }}</td>
               </tr>
             </tbody>
           </table>
@@ -102,12 +102,12 @@
               <tr
                 v-else
                 v-for="branch in topBranches"
-                :key="branch.name"
+                :key="branch.name || branch.id"
                 class="border-t"
               >
                 <td class="py-4">{{ branch.name }}</td>
-                <td>Rp {{ branch.totalRevenue.toLocaleString() }}</td>
-                <td>{{ branch.totalTransactions }}</td>
+                <td>Rp {{ Number(branch.totalRevenue || 0).toLocaleString() }}</td>
+                <td>{{ branch.totalTransactions || 0 }}</td>
               </tr>
             </tbody>
           </table>
@@ -120,57 +120,76 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCustomerStore } from '../stores/customerStore'
-import { useBranchStore } from '../stores/branchStore'
-import { useVoucherStore } from '../stores/voucherStore'
 import { useAuthStore } from '../stores/authStore'
+import { dashboardService } from '../services/dashboardService'
 
 export default {
   name: 'DashboardPage',
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()
-    const customerStore = useCustomerStore()
-    const branchStore = useBranchStore()
-    const voucherStore = useVoucherStore()
     
     const loading = ref(false)
     const error = ref(null)
+    
+    // Dashboard data from API
+    const dashboardData = ref(null)
+    const topCustomers = ref([])
+    const topBranches = ref([])
 
-    // Mock data for best customers and branches
-    const topCustomers = ref([
-      { name: 'John Doe', totalAmount: 2500000, totalTransactions: 15 },
-      { name: 'Jane Smith', totalAmount: 1800000, totalTransactions: 12 },
-      { name: 'Bob Johnson', totalAmount: 1200000, totalTransactions: 8 }
-    ])
-
-    const topBranches = ref([
-      { name: 'Branch Central', totalRevenue: 15000000, totalTransactions: 120 },
-      { name: 'Branch East', totalRevenue: 12000000, totalTransactions: 95 },
-      { name: 'Branch West', totalRevenue: 9000000, totalTransactions: 78 }
-    ])
-
-    // Computed stats
-    const stats = computed(() => [
-      {
-        label: 'Total Customers',
-        value: customerStore.totalCustomers,
-        change: '+12%',
-        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
-      },
-      {
-        label: 'Total Branches',
-        value: branchStore.totalBranches,
-        change: '+5%',
-        icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
-      },
-      {
-        label: 'Active Vouchers',
-        value: voucherStore.activeVouchers.length,
-        change: '+8%',
-        icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
+    // Simple computed stats for debugging
+    const stats = computed(() => {
+      console.log('Computing stats, dashboardData:', dashboardData.value)
+      
+      if (!dashboardData.value) {
+        console.log('No dashboard data, returning defaults')
+        return [
+          {
+            label: 'Total Customers',
+            value: 0,
+            change: '+0%',
+            icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 616 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+          },
+          {
+            label: 'Total Branches',
+            value: 0,
+            change: '+0%',
+            icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+          },
+          {
+            label: 'Active Vouchers',
+            value: 0,
+            change: '+0%',
+            icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 713 12V7a4 4 0 714-4z'
+          }
+        ]
       }
-    ])
+      
+      // Use direct response structure
+      const data = dashboardData.value
+      console.log('Using dashboard data:', data)
+      
+      return [
+        {
+          label: 'Total Customers',
+          value: data.total_customers || 0,
+          change: '+12%',
+          icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 616 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+        },
+        {
+          label: 'Total Branches',
+          value: data.total_branches || 0,
+          change: '+5%',
+          icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+        },
+        {
+          label: 'Active Vouchers',
+          value: data.active_vouchers || 0,
+          change: '+8%',
+          icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 713 12V7a4 4 0 714-4z'
+        }
+      ]
+    })
 
     // Load dashboard data
     const loadDashboardData = async () => {
@@ -178,33 +197,48 @@ export default {
       error.value = null
 
       try {
-        // Load data dengan error handling untuk setiap store
-        const promises = []
+        console.log('Loading dashboard data from API...')
+        const response = await dashboardService.getDashboardData()
+        console.log('Dashboard API response:', response)
         
-        // Hanya load jika store tersedia
-        if (customerStore?.fetchCustomers) {
-          promises.push(customerStore.fetchCustomers().catch(err => {
-            console.warn('Failed to load customers:', err)
-          }))
+        if (response) {
+          // Response structure dari endpoint yang Anda buat:
+          // { total_customers, total_branches, active_vouchers, best_customers, best_branches }
+          const apiData = response
+          console.log('API Data received:', apiData)
+          
+          // Store data untuk computed stats (langsung gunakan response)
+          dashboardData.value = apiData
+          
+          // Update customers data
+          if (apiData.best_customers && Array.isArray(apiData.best_customers)) {
+            topCustomers.value = apiData.best_customers.map(customer => ({
+              id: customer.id,
+              name: customer.name || 'Unknown',
+              totalAmount: Number(customer.transactions_sum_total_amount) || 0,
+              totalTransactions: 0 // Tidak ada data transactions count dari withSum
+            }))
+          }
+          
+          // Update branches data
+          if (apiData.best_branches && Array.isArray(apiData.best_branches)) {
+            topBranches.value = apiData.best_branches.map(branch => ({
+              id: branch.id,
+              name: branch.name || 'Unknown',
+              totalRevenue: Number(branch.transactions_sum_total_amount) || 0,
+              totalTransactions: 0 // Tidak ada data transactions count dari withSum
+            }))
+          }
         }
-        
-        if (branchStore?.fetchBranches) {
-          promises.push(branchStore.fetchBranches().catch(err => {
-            console.warn('Failed to load branches:', err)
-          }))
-        }
-        
-        if (voucherStore?.fetchVouchers) {
-          promises.push(voucherStore.fetchVouchers().catch(err => {
-            console.warn('Failed to load vouchers:', err)
-          }))
-        }
-        
-        await Promise.allSettled(promises)
         
       } catch (err) {
-        error.value = 'Failed to load dashboard data'
+        error.value = 'Failed to load dashboard data: ' + err.message
         console.error('Dashboard error:', err)
+        
+        // Reset to empty arrays on error
+        topCustomers.value = []
+        topBranches.value = []
+        dashboardData.value = null
       } finally {
         loading.value = false
       }
@@ -225,9 +259,7 @@ export default {
       }
       
       // Load dashboard data setelah mount
-      setTimeout(() => {
-        loadDashboardData()
-      }, 100)
+      loadDashboardData()
     })
 
     return {

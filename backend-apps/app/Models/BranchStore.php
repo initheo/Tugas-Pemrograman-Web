@@ -17,4 +17,9 @@ class BranchStore extends Model
     ];
 
 
+ public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'branch_store_id');
+    }
+
 }

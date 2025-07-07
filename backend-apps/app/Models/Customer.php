@@ -18,4 +18,12 @@ class Customer extends Model
         'postal_code'
     ];
 
+    /**
+     * Get the transactions for the customer.
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'customer_id');
+    }
+
 }
