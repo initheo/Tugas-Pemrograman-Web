@@ -1,8 +1,13 @@
 <template>
   <div class="p-6">
+    <!-- Error state for store initialization -->
+    <div v-if="!transactionStore || !isComponentMounted" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <p class="text-yellow-700">Loading component... Please wait.</p>
+    </div>
+
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-semibold">Transactions Management</h1>
-      <button @click="openCreateForm" class="flex items-center btn-primary">
+      <button @click="openCreateForm" class="flex items-center btn-primary" :disabled="!transactionStore || !isComponentMounted">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -11,7 +16,7 @@
     </div>
 
     <!-- Error Message -->
-    <div v-if="transactionStore.error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+    <div v-if="transactionStore?.error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
       <p class="text-red-700">{{ transactionStore.error }}</p>
       <button @click="transactionStore.clearError()" class="mt-2 text-sm text-red-600 hover:text-red-800">
         Dismiss
@@ -70,7 +75,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="transactionStore.loading" class="animate-pulse">
+              <tr v-if="!isComponentMounted || transactionStore?.loading" class="animate-pulse">
                 <td colspan="9" class="py-4 text-center">Loading...</td>
               </tr>
               <tr v-else-if="paginatedTransactions.length === 0" class="border-t">
@@ -122,17 +127,35 @@
                   </span>
                 </td>
                 <td class="py-4">
-                  <span :class="[
-                    'px-2 py-1 text-xs rounded-full',
-                    {
-                      'bg-green-100 text-green-800': transaction.status_laundry === 'completed',
-                      'bg-blue-100 text-blue-800': transaction.status_laundry === 'processing',
-                      'bg-gray-100 text-gray-800': transaction.status_laundry === 'pending',
-                      'bg-red-100 text-red-800': transaction.status_laundry === 'cancelled'
-                    }
-                  ]">
-                    {{ transaction.status_laundry }}
-                  </span>
+                  <div class="flex items-center justify-between">
+                    <span :class="[
+                      'px-2 py-1 text-xs rounded-full',
+                      {
+                        'bg-green-100 text-green-800': transaction.status_laundry === 'completed',
+                        'bg-blue-100 text-blue-800': transaction.status_laundry === 'processing',
+                        'bg-gray-100 text-gray-800': transaction.status_laundry === 'pending',
+                        'bg-red-100 text-red-800': transaction.status_laundry === 'cancelled'
+                      }
+                    ]">
+                      {{ transaction.status_laundry }}
+                    </span>
+                    
+                    <!-- Status Update Button -->
+                    <button
+                      v-if="canUpdateLaundryStatus(transaction.status_laundry)"
+                      @click="updateLaundryStatus(transaction)"
+                      :class="[
+                        'ml-2 px-2 py-1 text-xs rounded-lg transition-colors',
+                        {
+                          'bg-blue-600 text-white hover:bg-blue-700': transaction.status_laundry === 'pending',
+                          'bg-green-600 text-white hover:bg-green-700': transaction.status_laundry === 'processing'
+                        }
+                      ]"
+                      :title="getNextStatusText(transaction.status_laundry)"
+                    >
+                      {{ getNextStatusText(transaction.status_laundry) }}
+                    </button>
+                  </div>
                 </td>
                 <td class="py-4">
                   <span class="text-sm text-gray-600">{{ transaction.notes || '-' }}</span>
@@ -219,7 +242,7 @@
 
     <!-- Transaction Form Modal -->
     <TransactionForm
-      v-if="showForm"
+      v-if="showForm && transactionStore && isComponentMounted"
       :loading="transactionStore.loading"
       @close="closeForm"
       @submit="handleSubmit"
@@ -258,7 +281,7 @@
   </div>
 </template>
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useTransactionStore } from '../stores/transactionStore'
 import { useCustomerStore } from '../stores/customerStore'
 import { useBranchStore } from '../stores/branchStore'
@@ -271,10 +294,21 @@ export default {
     TransactionForm
   },
   setup() {
-    const transactionStore = useTransactionStore()
-    const customerStore = useCustomerStore()
-    const branchStore = useBranchStore()
-    const voucherStore = useVoucherStore()
+    // Initialize stores with error handling
+    let transactionStore, customerStore, branchStore, voucherStore
+    
+    try {
+      transactionStore = useTransactionStore()
+      customerStore = useCustomerStore()
+      branchStore = useBranchStore()
+      voucherStore = useVoucherStore()
+    } catch (error) {
+      console.error('Error initializing stores:', error)
+      // Return minimal setup to prevent crashes
+      return {
+        error: 'Failed to initialize stores'
+      }
+    }
 
     // Reactive data
     const showForm = ref(false)
@@ -283,9 +317,11 @@ export default {
     const searchQuery = ref('')
     const itemsPerPage = ref(10)
     const currentPage = ref(1)
+    const isComponentMounted = ref(false)
 
-    // Computed properties
+    // Computed properties with safety checks
     const filteredTransactions = computed(() => {
+      if (!transactionStore || !isComponentMounted.value) return []
       const transactions = transactionStore.transactions || []
       if (!searchQuery.value) return transactions
 
@@ -305,6 +341,7 @@ export default {
     })
 
     const paginatedTransactions = computed(() => {
+      if (!isComponentMounted.value) return []
       const transactions = filteredTransactions.value || []
       const start = (currentPage.value - 1) * itemsPerPage.value
       const end = start + itemsPerPage.value
@@ -312,6 +349,7 @@ export default {
     })
 
     const totalPages = computed(() => {
+      if (!isComponentMounted.value) return 1
       const total = filteredTransactions.value?.length || 0
       return Math.ceil(total / itemsPerPage.value) || 1
     })
@@ -337,6 +375,11 @@ export default {
     }
 
     const handleSubmit = async (transactionData) => {
+      if (!transactionStore || !isComponentMounted.value) {
+        alert('Component not ready. Please try again.')
+        return
+      }
+      
       try {
         const response = await transactionStore.createTransaction(transactionData)
         
@@ -355,6 +398,11 @@ export default {
     }
 
     const checkPaymentStatus = async (transaction) => {
+      if (!transactionStore || !isComponentMounted.value) {
+        alert('Component not ready. Please try again.')
+        return
+      }
+      
       try {
         const response = await transactionStore.checkPaymentStatus(transaction.id)
         
@@ -370,12 +418,25 @@ export default {
     }
 
     const refreshTransaction = async (transaction) => {
+      if (!transactionStore || !isComponentMounted.value) {
+        alert('Component not ready. Please try again.')
+        return
+      }
+      
       try {
+        console.log('Refreshing transaction:', transaction.id)
         await transactionStore.refreshTransaction(transaction.id)
         alert('Transaction data refreshed!')
       } catch (error) {
         console.error('Error refreshing transaction:', error)
-        alert('Error refreshing transaction: ' + (error.response?.data?.message || error.message))
+        // Fallback: reload all transactions if single refresh fails
+        try {
+          await transactionStore.fetchTransactions()
+          alert('Transactions list refreshed!')
+        } catch (fallbackError) {
+          console.error('Error in fallback refresh:', fallbackError)
+          alert('Error refreshing transaction: ' + (error.response?.data?.message || error.message))
+        }
       }
     }
 
@@ -385,6 +446,11 @@ export default {
     }
 
     const deleteTransaction = async () => {
+      if (!transactionStore || !isComponentMounted.value) {
+        alert('Component not ready. Please try again.')
+        return
+      }
+      
       try {
         await transactionStore.deleteTransaction(transactionToDelete.value.id)
         showDeleteConfirm.value = false
@@ -396,7 +462,75 @@ export default {
       }
     }
 
+    // Laundry status management functions
+    const canUpdateLaundryStatus = (currentStatus) => {
+      return currentStatus === 'pending' || currentStatus === 'processing'
+    }
+
+    const getNextStatusText = (currentStatus) => {
+      if (currentStatus === 'pending') return 'Start Process'
+      if (currentStatus === 'processing') return 'Mark Complete'
+      return ''
+    }
+
+    const getNextStatus = (currentStatus) => {
+      if (currentStatus === 'pending') return 'processing'
+      if (currentStatus === 'processing') return 'completed'
+      return currentStatus
+    }
+
+    const updateLaundryStatus = async (transaction) => {
+      if (!transactionStore || !isComponentMounted.value) {
+        alert('Component not ready. Please try again.')
+        return
+      }
+      
+      try {
+        const currentStatus = transaction.status_laundry
+        const nextStatus = getNextStatus(currentStatus)
+        
+        if (!nextStatus || nextStatus === currentStatus) {
+          return
+        }
+
+        const confirmMessage = currentStatus === 'pending' 
+          ? `Start processing laundry for transaction #${transaction.id}?`
+          : `Mark laundry as completed for transaction #${transaction.id}?`
+        
+        if (!confirm(confirmMessage)) {
+          return
+        }
+
+        // Show loading state
+        const loadingMessage = nextStatus === 'processing' 
+          ? 'Starting laundry process...'
+          : 'Marking as completed...'
+        
+        console.log(loadingMessage)
+
+        await transactionStore.updateLaundryStatus(transaction.id, nextStatus)
+        
+        const successMessage = nextStatus === 'processing' 
+          ? 'Laundry process started successfully!'
+          : 'Laundry marked as completed!'
+          
+        alert(successMessage)
+        
+        // Refresh the transactions list to show updated status
+        await transactionStore.fetchTransactions()
+        
+      } catch (error) {
+        console.error('Error updating laundry status:', error)
+        alert('Error updating laundry status: ' + (error.response?.data?.message || error.message))
+      }
+    }
+
     const loadData = async () => {
+      if (!transactionStore || !customerStore || !branchStore || !voucherStore) {
+        console.error('Stores not properly initialized')
+        return
+      }
+      
       try {
         await Promise.allSettled([
           transactionStore.fetchTransactions(),
@@ -410,8 +544,14 @@ export default {
     }
 
     // Load data on component mount
-    onMounted(() => {
-      loadData()
+    onMounted(async () => {
+      isComponentMounted.value = true
+      await loadData()
+    })
+
+    // Cleanup on unmount
+    onUnmounted(() => {
+      isComponentMounted.value = false
     })
 
     return {
@@ -428,6 +568,7 @@ export default {
       totalPages,
       filteredTransactions,
       paginatedTransactions,
+      isComponentMounted,
       formatDate,
       openCreateForm,
       openPaymentLink,
@@ -437,7 +578,10 @@ export default {
       refreshTransaction,
       confirmDelete,
       deleteTransaction,
-      loadData
+      loadData,
+      canUpdateLaundryStatus,
+      getNextStatusText,
+      updateLaundryStatus
     }
   }
 }
@@ -454,12 +598,17 @@ export default {
   cursor: pointer;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: #1d4ed8;
 }
 
 .btn-primary:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+.btn-primary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }
 </style>

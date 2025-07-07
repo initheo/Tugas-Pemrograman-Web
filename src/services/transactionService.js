@@ -65,5 +65,30 @@ export const transactionService = {
       console.error('Error handling payment callback:', error)
       throw new Error(error.response?.data?.message || 'Failed to handle payment callback')
     }
+  },
+
+  // Update laundry status
+  async updateLaundryStatus(id, status) {
+    try {
+      const response = await api.patch(`/transactions/${id}/laundry-status`, {
+        status_laundry: status
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error updating laundry status:', error)
+      throw new Error(error.response?.data?.message || 'Failed to update laundry status')
+    }
+  },
+
+  // Refresh transaction data
+  async refreshTransaction(id) {
+    try {
+      const response = await api.get(`/transactions/${id}/refresh`)
+      return response.data
+    } catch (error) {
+      console.error('Error refreshing transaction:', error)
+      // Fallback to regular get if refresh endpoint doesn't exist
+      return this.getTransaction(id)
+    }
   }
 }

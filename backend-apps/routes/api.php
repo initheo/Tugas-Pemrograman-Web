@@ -30,6 +30,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Endpoint untuk Transactions
     Route::resource('transactions', App\Http\Controllers\API\TransactionController::class);
     Route::get('transactions/{id}/payment-status', [App\Http\Controllers\API\TransactionController::class, 'checkPaymentStatus']);
+    Route::patch('transactions/{id}/laundry-status', [App\Http\Controllers\API\TransactionController::class, 'updateLaundryStatus']);
 
     // handle insight dashboard route
     Route::get('/dashboard', function () {

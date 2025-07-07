@@ -254,4 +254,50 @@ class TransactionController extends Controller
 
     }
 
+    // Update laundry status
+    public function updateLaundryStatus(Request $request, $id)
+    {
+        try {
+            $transaction = Transaction::find($id);
+            
+            if (!$transaction) {
+                return response()->json(['message' => 'Transaction not found'], 404);
+            }
+
+            $request->validate([
+                'status_laundry' => 'required|in:pending,processing,completed,cancelled'
+            ]);
+
+            // Check valid status transitions
+            $currentStatus = $transaction->status_laundry;
+            $newStatus = $request->status_laundry;
+
+            $validTransitions = [
+                'pending' => ['processing', 'cancelled'],
+                'processing' => ['completed', 'cancelled'],
+                'completed' => [], // Cannot change from completed
+                'cancelled' => [] // Cannot change from cancelled
+            ];
+
+            if (!in_array($newStatus, $validTransitions[$currentStatus] ?? [])) {
+                return response()->json([
+                    'message' => "Invalid status transition from {$currentStatus} to {$newStatus}"
+                ], 422);
+            }
+
+            $transaction->update(['status_laundry' => $newStatus]);
+
+            return response()->json([
+                'message' => 'Laundry status updated successfully',
+                'data' => $transaction->load(['customer', 'branchStore', 'voucher'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update laundry status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

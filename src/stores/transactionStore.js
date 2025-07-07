@@ -6,7 +6,8 @@ export const useTransactionStore = defineStore('transaction', {
     transactions: [],
     currentTransaction: null,
     loading: false,
-    error: null
+    error: null,
+    initialized: false
   }),
 
   getters: {
@@ -15,7 +16,8 @@ export const useTransactionStore = defineStore('transaction', {
     },
     totalTransactions: (state) => state.transactions.length,
     pendingTransactions: (state) => state.transactions.filter(t => t.status_payment === 'unpaid'),
-    completedTransactions: (state) => state.transactions.filter(t => t.status_payment === 'paid')
+    completedTransactions: (state) => state.transactions.filter(t => t.status_payment === 'paid'),
+    isReady: (state) => state.initialized && !state.loading
   },
 
   actions: {
@@ -27,6 +29,7 @@ export const useTransactionStore = defineStore('transaction', {
       try {
         const response = await transactionService.getTransactions()
         this.transactions = response.data || response || []
+        this.initialized = true
         this.loading = false
       } catch (error) {
         this.error = error.message
@@ -60,6 +63,7 @@ export const useTransactionStore = defineStore('transaction', {
             branch_store: { id: 1, name: 'Main Branch', address: 'Jl. Sudirman No. 1' }
           }
         ]
+        this.initialized = true
       }
     },
 
@@ -169,6 +173,58 @@ export const useTransactionStore = defineStore('transaction', {
         this.error = error.message
         this.loading = false
         console.warn('Failed to check payment status:', error.message)
+        throw error
+      }
+    },
+
+    // Update laundry status
+    async updateLaundryStatus(id, status) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const response = await transactionService.updateLaundryStatus(id, status)
+        const result = response.data || response
+        
+        // Update transaction in local state
+        const index = this.transactions.findIndex(t => t.id === parseInt(id))
+        if (index !== -1) {
+          this.transactions[index] = { ...this.transactions[index], status_laundry: status }
+        }
+        
+        this.loading = false
+        console.log('Laundry status updated:', result)
+        return result
+      } catch (error) {
+        this.error = error.message
+        this.loading = false
+        console.error('Failed to update laundry status:', error.message)
+        throw error
+      }
+    },
+
+    // Refresh transaction data
+    async refreshTransaction(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const response = await transactionService.refreshTransaction(id)
+        const result = response.data || response
+        
+        // Update transaction in local state
+        const index = this.transactions.findIndex(t => t.id === parseInt(id))
+        if (index !== -1) {
+          this.transactions[index] = { ...this.transactions[index], ...result }
+        }
+        
+        this.loading = false
+        console.log('Transaction refreshed:', result)
+        return result
+      } catch (error) {
+        this.error = error.message
+        this.loading = false
+        console.warn('Failed to refresh transaction:', error.message)
         throw error
       }
     },
