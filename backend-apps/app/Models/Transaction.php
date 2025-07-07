@@ -12,12 +12,32 @@ class Transaction extends Model
     protected $fillable = [
         'customer_id',
         'branch_store_id',
+        'voucher_id',
         'transaction_date',
+        'base_amount',
+        'discount_amount',
         'total_amount',
         'status_payment',
         'status_laundry',
         'urlPaymentGateway',
-        'notes'
+        'payment_session_id',
+        'payment_reference_id',
+        'notes',
+        'payment_method'
     ];
-    
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function branchStore()
+    {
+        return $this->belongsTo(BranchStore::class);
+    }
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
+    }
 }

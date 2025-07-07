@@ -25,4 +25,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Endpoint Untuk Voucher
     Route::resource('vouchers', App\Http\Controllers\API\VoucherController::class);
 
+    // Endpoint untuk Transactions
+    Route::resource('transactions', App\Http\Controllers\API\TransactionController::class);
+    Route::get('transactions/{id}/payment-status', [App\Http\Controllers\API\TransactionController::class, 'checkPaymentStatus']);
 });
+
+// Payment callback (tidak perlu auth)
+Route::post('payment/callback', [App\Http\Controllers\API\TransactionController::class, 'paymentCallback']);

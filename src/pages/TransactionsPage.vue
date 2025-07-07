@@ -1,8 +1,8 @@
 <template>
   <div class="p-6">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold">Transactions</h1>
-      <button @click="showForm = true" class="flex items-center btn-primary">
+      <h1 class="text-2xl font-semibold">Transactions Management</h1>
+      <button @click="openCreateForm" class="flex items-center btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -10,10 +10,18 @@
       </button>
     </div>
 
+    <!-- Error Message -->
+    <div v-if="transactionStore.error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-red-700">{{ transactionStore.error }}</p>
+      <button @click="transactionStore.clearError()" class="mt-2 text-sm text-red-600 hover:text-red-800">
+        Dismiss
+      </button>
+    </div>
+
     <!-- Transaction list table -->
     <div class="bg-white rounded-lg shadow">
       <div class="p-6">
-         <!-- Search and Items per page -->
+        <!-- Search and Items per page -->
         <div class="flex items-center justify-between mb-4">
           <div class="relative">
             <input
@@ -50,99 +58,94 @@
           <table class="w-full">
             <thead>
               <tr class="text-sm font-medium text-left text-gray-600 border-b">
-                <th class="pb-4 cursor-pointer select-none">Customer</th>
-                <th class="pb-4 cursor-pointer select-none">Date</th>
-                <th class="pb-4 cursor-pointer select-none">Branch</th>
-                <th class="pb-4 cursor-pointer select-none">Weight</th>
-                <th class="pb-4 cursor-pointer select-none">Amount</th>
-                <th class="pb-4 cursor-pointer select-none">Status</th>
-                <th class="pb-4 cursor-pointer select-none">Payment</th>
-                <th class="pb-4">Payment Link</th>
+                <th class="pb-4">ID</th>
+                <th class="pb-4">Customer</th>
+                <th class="pb-4">Branch</th>
+                <th class="pb-4">Date</th>
+                <th class="pb-4">Amount</th>
+                <th class="pb-4">Payment Status</th>
+                <th class="pb-4">Laundry Status</th>
+                <th class="pb-4">Notes</th>
+                <th class="pb-4">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-if="transactionStore?.loading"
-                class="animate-pulse"
-              >
-                <td colspan="8" class="py-4 text-center">Loading...</td>
+              <tr v-if="transactionStore.loading" class="animate-pulse">
+                <td colspan="9" class="py-4 text-center">Loading...</td>
               </tr>
-              <tr
-                v-else-if="(paginatedTransactions || []).length === 0"
-                class="border-t"
-              >
-                <td colspan="8" class="py-4 text-center text-gray-500">No transactions found</td>
+              <tr v-else-if="paginatedTransactions.length === 0" class="border-t">
+                <td colspan="9" class="py-4 text-center text-gray-500">No transactions found</td>
               </tr>
               <tr
                 v-for="transaction in paginatedTransactions"
                 :key="transaction.id"
                 class="transition-colors border-t hover:bg-gray-50"
               >
+                <td class="py-4 font-medium">#{{ transaction.id }}</td>
                 <td class="py-4">
-                  {{ (customerStore.customers || []).find(c => c.id === transaction.pelanggan?.id)?.nama || 'Unknown Customer' }}
-                </td>
-                <td>{{ new Date(transaction.tanggal).toLocaleDateString() }}</td>
-                <td>
-                  {{ (branchStore.branches || []).find(b => b.id === transaction.kantor?.id)?.namaCabang || 'Unknown Branch' }}
-                </td>
-                <td>{{ transaction.berat }} kg</td>
-                <td>Rp {{ transaction.totalNominal.toLocaleString() }}</td>
-                <td>
-                  <span :class="[
-                    'px-2 py-1 text-xs rounded-full',
-                    {
-                      'bg-green-100 text-green-800': transaction.statusCucian === 'selesai',
-                      'bg-yellow-100 text-yellow-800': transaction.statusCucian === 'proses',
-                      'bg-gray-100 text-gray-800': transaction.statusCucian === 'pending',
-                      'bg-red-100 text-red-800': transaction.statusCucian === 'expired'
-                    }
-                  ]">
-                    {{ transaction.statusCucian }}
-                  </span>
-                </td>
-                <td>
-                  <span :class="[
-                    'px-2 py-1 text-xs rounded-full',
-                    {
-                      'bg-green-100 text-green-800': transaction.statusPembayaran === 'berhasil',
-                      'bg-yellow-100 text-yellow-800': transaction.statusPembayaran === 'pending',
-                      'bg-red-100 text-red-800': transaction.statusPembayaran === 'expired'
-                    }
-                  ]">
-                    {{ transaction.statusPembayaran }}
-                  </span>
-                </td>
-                <td>
-                  <div v-if="transaction.statusPembayaran === 'berhasil'"
-                      class="inline-flex items-center justify-center w-32 px-3 py-2 text-sm font-medium text-green-700 transition-all duration-200 bg-green-100 border border-green-200 rounded-lg hover:bg-green-200">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        class="w-4 h-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor">
-                      <path stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    PAID
+                  <div>
+                    <div class="font-medium">{{ transaction.customer?.name || 'Unknown Customer' }}</div>
+                    <div class="text-sm text-gray-500">{{ transaction.customer?.email || '' }}</div>
                   </div>
-                  <a v-else-if="transaction.statusPembayaran === 'pending'"
-                    :href="transaction.urlPaymentGateway"
-                    target="_blank"
-                    class="inline-flex items-center justify-center w-32 px-3 py-2 text-sm font-medium text-white transition-all duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        class="w-4 h-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor">
-                      <path stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                    Pay Now
-                  </a>
+                </td>
+                <td class="py-4">
+                  <div>
+                    <div class="font-medium">{{ transaction.branch_store?.name || 'Unknown Branch' }}</div>
+                    <div class="text-sm text-gray-500">{{ transaction.branch_store?.address || '' }}</div>
+                  </div>
+                </td>
+                <td class="py-4">{{ formatDate(transaction.transaction_date) }}</td>
+                <td class="py-4 font-semibold">Rp {{ Number(transaction.total_amount || 0).toLocaleString() }}</td>
+                <td class="py-4">
+                  <span :class="[
+                    'px-2 py-1 text-xs rounded-full',
+                    {
+                      'bg-green-100 text-green-800': transaction.status_payment === 'paid',
+                      'bg-yellow-100 text-yellow-800': transaction.status_payment === 'unpaid',
+                      'bg-red-100 text-red-800': transaction.status_payment === 'expired'
+                    }
+                  ]">
+                    {{ transaction.status_payment }}
+                  </span>
+                </td>
+                <td class="py-4">
+                  <span :class="[
+                    'px-2 py-1 text-xs rounded-full',
+                    {
+                      'bg-green-100 text-green-800': transaction.status_laundry === 'completed',
+                      'bg-blue-100 text-blue-800': transaction.status_laundry === 'processing',
+                      'bg-gray-100 text-gray-800': transaction.status_laundry === 'pending',
+                      'bg-red-100 text-red-800': transaction.status_laundry === 'cancelled'
+                    }
+                  ]">
+                    {{ transaction.status_laundry }}
+                  </span>
+                </td>
+                <td class="py-4">
+                  <span class="text-sm text-gray-600">{{ transaction.notes || '-' }}</span>
+                </td>
+                <td class="py-4">
+                  <div class="flex items-center space-x-2">
+                    <button
+                      v-if="transaction.urlPaymentGateway"
+                      @click="openPaymentLink(transaction.urlPaymentGateway)"
+                      class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      title="Open Payment Link"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M7 7h10v10M17 7l-10 10" />
+                      </svg>
+                    </button>
+                    <button
+                      @click="confirmDelete(transaction)"
+                      class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -179,129 +182,69 @@
     </div>
 
     <!-- Transaction Form Modal -->
-    <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-black/50">
+    <TransactionForm
+      v-if="showForm"
+      :loading="transactionStore.loading"
+      @close="closeForm"
+      @submit="handleSubmit"
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div class="w-full max-w-md p-6 bg-white rounded-lg">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold">New Transaction</h2>
-          <button @click="showForm = false" class="text-gray-500 hover:text-gray-700">
+          <h3 class="text-lg font-medium text-gray-900">Confirm Delete</h3>
+          <button @click="showDeleteConfirm = false" class="text-gray-500 hover:text-gray-700">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-
-        <form @submit.prevent="submitForm" class="space-y-4">
-          <div>
-            <label for="customer" class="form-label">Customer</label>
-            <select id="customer" v-model="form.customerId" required class="input-field">
-              <option value="">Select Customer</option>
-              <option v-for="customer in (customerStore.customers || [])" :key="customer.id" :value="customer.id">
-                {{ customer.nama }}
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label for="branch" class="form-label">Branch</label>
-            <select id="branch" v-model="form.branchId" required class="input-field">
-              <option value="">Select Branch</option>
-              <option v-for="branch in (branchStore.branches || [])" :key="branch.id" :value="branch.id">
-                {{ branch.namaCabang }}
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label for="weight" class="form-label">Weight (kg)</label>
-            <input id="weight" v-model.number="form.weight" type="number" min="0" step="0.1" required
-              class="input-field" />
-          </div>
-
-          <div>
-            <label for="amount" class="form-label">Price per kg</label>
-            <input id="amount" v-model.number="form.amount" type="number" readonly required class="input-field" />
-          </div>
-
-          <div>
-            <label for="paymentMethod" class="form-label">Payment Method</label>
-            <select id="paymentMethod" v-model="form.paymentMethod" required class="input-field">
-              <option value="CASH">Cash</option>
-              <option value="TRANSFER">Bank Transfer</option>
-            </select>
-          </div>
-
-          <div v-if="form.paymentMethod === 'CASH'" class="space-y-4">
-            <div>
-              <label for="paid" class="form-label">Paid Amount</label>
-              <input id="paid" v-model.number="form.paid" type="number" min="0" :max="calculateTotal" required
-                class="input-field" />
-            </div>
-          </div>
-
-          <div>
-            <label for="voucherName" class="form-label">Voucher Code</label>
-            <div class="flex gap-2">
-              <input id="voucherName" v-model="form.namaVoucher" type="text" class="input-field"
-                placeholder="Enter voucher name" />
-              <button type="button" @click="validateVoucher" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-                Apply
-              </button>
-            </div>
-            <p v-if="voucherError" class="mt-1 text-sm text-red-500">
-              {{ voucherError }}
-            </p>
-            <p v-if="selectedVoucher" class="mt-1 text-sm text-green-500">
-              Voucher applied: {{ selectedVoucher.diskonRate }}% discount
-            </p>
-          </div>
-
-          <div class="pt-4 border-t">
-            <label for="totalAmount" class="form-label">Total Amount</label>
-            <input id="totalAmount" type="number" class="input-field" :value="form.totalAmount" disabled />
-          </div>
-
-          <button type="submit" class="w-full btn-primary">
-            Create Transaction
+        <p class="text-gray-700 mb-6">
+          Are you sure you want to delete transaction #{{ transactionToDelete?.id }}? This action cannot be undone.
+        </p>
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="showDeleteConfirm = false"
+            class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Cancel
           </button>
-        </form>
+          <button
+            @click="deleteTransaction"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
-
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useTransactionStore } from '../stores/transactionStore'
 import { useCustomerStore } from '../stores/customerStore'
 import { useBranchStore } from '../stores/branchStore'
-import { useVoucherStore } from '../stores/voucherStore'
-import { useTransactionStore } from '../stores/transactionStore'
+import TransactionForm from '../components/TransactionForm.vue'
 
 export default {
   name: 'TransactionsPage',
+  components: {
+    TransactionForm
+  },
   setup() {
+    const transactionStore = useTransactionStore()
     const customerStore = useCustomerStore()
     const branchStore = useBranchStore()
-    const voucherStore = useVoucherStore()
-    const transactionStore = useTransactionStore()
 
     // Reactive data
     const showForm = ref(false)
+    const showDeleteConfirm = ref(false)
+    const transactionToDelete = ref(null)
     const searchQuery = ref('')
     const itemsPerPage = ref(10)
     const currentPage = ref(1)
-    const voucherError = ref('')
-    const selectedVoucher = ref(null)
-
-    const form = ref({
-      customerId: '',
-      branchId: '',
-      weight: 0,
-      amount: 10000, // Default price per kg
-      paymentMethod: 'CASH',
-      paid: 0,
-      namaVoucher: '',
-      totalAmount: 0
-    })
 
     // Computed properties
     const filteredTransactions = computed(() => {
@@ -309,14 +252,16 @@ export default {
       if (!searchQuery.value) return transactions
 
       return transactions.filter(transaction => {
-        const customer = customerStore.customers?.find(c => c.id === transaction.pelanggan?.id)
-        const branch = branchStore.branches?.find(b => b.id === transaction.kantor?.id)
+        const customer = transaction.customer?.name || ''
+        const branch = transaction.branch_store?.name || ''
+        const status = transaction.status_payment || ''
+        const notes = transaction.notes || ''
         
         return (
-          customer?.nama?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          branch?.namaCabang?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          transaction.statusCucian?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          transaction.statusPembayaran?.toLowerCase().includes(searchQuery.value.toLowerCase())
+          customer.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          branch.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          status.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          notes.toLowerCase().includes(searchQuery.value.toLowerCase())
         )
       })
     })
@@ -330,96 +275,64 @@ export default {
 
     const totalPages = computed(() => {
       const total = filteredTransactions.value?.length || 0
-      return Math.ceil(total / itemsPerPage.value)
+      return Math.ceil(total / itemsPerPage.value) || 1
     })
-
-    const calculateTotal = computed(() => {
-      const subtotal = form.value.weight * form.value.amount
-      const discount = selectedVoucher.value ? (subtotal * selectedVoucher.value.diskonRate / 100) : 0
-      return subtotal - discount
-    })
-
-    // Watch for form changes to update total
-    watch([() => form.value.weight, () => form.value.amount, selectedVoucher], () => {
-      form.value.totalAmount = calculateTotal.value
-    }, { immediate: true })
 
     // Methods
-    const validateVoucher = async () => {
-      voucherError.value = ''
-      selectedVoucher.value = null
+    const formatDate = (date) => {
+      if (!date) return '-'
+      return new Date(date).toLocaleDateString('id-ID')
+    }
 
-      if (!form.value.namaVoucher) {
-        voucherError.value = 'Please enter voucher code'
-        return
-      }
+    const openCreateForm = () => {
+      editingTransaction.value = null
+      showForm.value = true
+    }
 
-      try {
-        const vouchers = voucherStore.vouchers || []
-        const voucher = vouchers.find(v => v.namaVoucher === form.value.namaVoucher && v.status === 'active')
-        
-        if (voucher) {
-          selectedVoucher.value = voucher
-        } else {
-          voucherError.value = 'Invalid or expired voucher code'
-        }
-      } catch (error) {
-        voucherError.value = 'Error validating voucher'
-        console.error('Voucher validation error:', error)
+    const closeForm = () => {
+      showForm.value = false
+    }
+
+    const openPaymentLink = (url) => {
+      if (url) {
+        window.open(url, '_blank')
       }
     }
 
-    const submitForm = async () => {
+    const handleSubmit = async (transactionData) => {
       try {
-        const transactionData = {
-          pelanggan: { id: form.value.customerId },
-          kantor: { id: form.value.branchId },
-          berat: form.value.weight,
-          totalNominal: form.value.totalAmount,
-          paymentMethod: form.value.paymentMethod,
-          paidAmount: form.value.paid,
-          voucher: selectedVoucher.value ? selectedVoucher.value.id : null
-        }
-
         await transactionStore.createTransaction(transactionData)
-        
-        // Reset form
-        form.value = {
-          customerId: '',
-          branchId: '',
-          weight: 0,
-          amount: 10000,
-          paymentMethod: 'CASH',
-          paid: 0,
-          namaVoucher: '',
-          totalAmount: 0
-        }
-        selectedVoucher.value = null
-        voucherError.value = ''
-        showForm.value = false
-
         alert('Transaction created successfully!')
+        closeForm()
       } catch (error) {
         console.error('Error creating transaction:', error)
         alert('Error creating transaction: ' + error.message)
       }
     }
 
+    const confirmDelete = (transaction) => {
+      transactionToDelete.value = transaction
+      showDeleteConfirm.value = true
+    }
+
+    const deleteTransaction = async () => {
+      try {
+        await transactionStore.deleteTransaction(transactionToDelete.value.id)
+        showDeleteConfirm.value = false
+        transactionToDelete.value = null
+        alert('Transaction deleted successfully!')
+      } catch (error) {
+        console.error('Error deleting transaction:', error)
+        alert('Error deleting transaction: ' + error.message)
+      }
+    }
+
     const loadData = async () => {
       try {
         await Promise.allSettled([
-          customerStore.fetchCustomers().catch(err => {
-            console.warn('Failed to load customers:', err)
-          }),
-          branchStore.fetchBranches().catch(err => {
-            console.warn('Failed to load branches:', err)
-          }),
-          voucherStore.fetchVouchers().catch(err => {
-            console.warn('Failed to load vouchers:', err)
-          }),
-          transactionStore.fetchTransactions().catch(err => {
-            console.warn('Failed to load transactions:', err)
-          })
+          transactionStore.fetchTransactions(),
+          customerStore.fetchCustomers(),
+          branchStore.fetchBranches()
         ])
       } catch (error) {
         console.error('Error loading data:', error)
@@ -432,23 +345,25 @@ export default {
     })
 
     return {
+      transactionStore,
       customerStore,
       branchStore,
-      voucherStore,
-      transactionStore,
       showForm,
+      showDeleteConfirm,
+      transactionToDelete,
       searchQuery,
       itemsPerPage,
       currentPage,
       totalPages,
-      form,
       filteredTransactions,
       paginatedTransactions,
-      voucherError,
-      selectedVoucher,
-      calculateTotal,
-      validateVoucher,
-      submitForm,
+      formatDate,
+      openCreateForm,
+      openPaymentLink,
+      closeForm,
+      handleSubmit,
+      confirmDelete,
+      deleteTransaction,
       loadData
     }
   }
@@ -462,6 +377,8 @@ export default {
   color: white;
   border-radius: 0.5rem;
   transition: all 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-primary:hover {
@@ -471,27 +388,5 @@ export default {
 .btn-primary:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
-}
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.25rem;
-}
-
-.input-field {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 </style>

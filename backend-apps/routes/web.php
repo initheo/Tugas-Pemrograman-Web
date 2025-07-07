@@ -28,6 +28,11 @@ Route::get('/', function(){
 
 })->name('index');
 
+
+// make handle route /api/payment/callback
+Route::post('/api/payment/callback', [App\Http\Controllers\API\TransactionController::class, 'paymentCallback'])
+    ->name('payment.callback');
+
 Route::get('/unauthenticated', function () {
     
     return response()->json([
