@@ -96,28 +96,20 @@ export const useTransactionStore = defineStore('transaction', {
         
         // Add to local state
         this.transactions.unshift(newTransaction)
-        this.loading = false
+        
+        // Auto open payment gateway URL if available
+        if (newTransaction.urlPaymentGateway && transactionData.payment_method === 'TRANSFER') {
+          window.open(newTransaction.urlPaymentGateway, '_blank')
+        }
+        
         console.log('Transaction created successfully:', newTransaction)
         return newTransaction
       } catch (error) {
         this.error = error.message
+        console.error('Failed to create transaction via API:', error)
+        throw error
+      } finally {
         this.loading = false
-        console.warn('Failed to create transaction via API, using mock creation')
-        
-        // Mock fallback for development
-        const mockTransaction = {
-          id: Date.now(),
-          ...transactionData,
-          transaction_date: transactionData.transaction_date || new Date().toISOString().split('T')[0],
-          status_payment: 'unpaid',
-          status_laundry: 'pending',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-        
-        this.transactions.unshift(mockTransaction)
-        console.log('Mock transaction created:', mockTransaction)
-        return mockTransaction
       }
     },
 

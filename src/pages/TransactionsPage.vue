@@ -95,7 +95,20 @@
                   </div>
                 </td>
                 <td class="py-4">{{ formatDate(transaction.transaction_date) }}</td>
-                <td class="py-4 font-semibold">Rp {{ Number(transaction.total_amount || 0).toLocaleString() }}</td>
+                <td class="py-4 font-semibold">
+                  <div>
+                    <div class="text-lg">Rp {{ Number(transaction.total_amount || 0).toLocaleString() }}</div>
+                    <div v-if="transaction.voucher" class="text-xs text-green-600">
+                      Voucher: {{ transaction.voucher.name }} 
+                      <span v-if="transaction.discount_amount > 0">
+                        (-Rp {{ Number(transaction.discount_amount).toLocaleString() }})
+                      </span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ transaction.payment_method || 'N/A' }}
+                    </div>
+                  </div>
+                </td>
                 <td class="py-4">
                   <span :class="[
                     'px-2 py-1 text-xs rounded-full',
@@ -126,6 +139,7 @@
                 </td>
                 <td class="py-4">
                   <div class="flex items-center space-x-2">
+                    <!-- Payment Link Button -->
                     <button
                       v-if="transaction.urlPaymentGateway"
                       @click="openPaymentLink(transaction.urlPaymentGateway)"
@@ -136,6 +150,28 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M7 7h10v10M17 7l-10 10" />
                       </svg>
                     </button>
+                    <!-- Check Payment Status Button -->
+                    <button
+                      v-if="transaction.status_payment === 'unpaid' && transaction.payment_session_id"
+                      @click="checkPaymentStatus(transaction)"
+                      class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Check Payment Status"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                    <!-- Refresh Transaction Button -->
+                    <button
+                      @click="refreshTransaction(transaction)"
+                      class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      title="Refresh Transaction"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                    <!-- Delete Button -->
                     <button
                       @click="confirmDelete(transaction)"
                       class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -285,7 +321,6 @@ export default {
     }
 
     const openCreateForm = () => {
-      editingTransaction.value = null
       showForm.value = true
     }
 
@@ -301,12 +336,44 @@ export default {
 
     const handleSubmit = async (transactionData) => {
       try {
-        await transactionStore.createTransaction(transactionData)
-        alert('Transaction created successfully!')
+        const response = await transactionStore.createTransaction(transactionData)
+        
+        // Show success message
+        if (response.urlPaymentGateway) {
+          alert('Transaction created successfully! Payment link has been opened.')
+        } else {
+          alert('Transaction created successfully!')
+        }
+        
         closeForm()
       } catch (error) {
         console.error('Error creating transaction:', error)
-        alert('Error creating transaction: ' + error.message)
+        alert('Error creating transaction: ' + (error.response?.data?.message || error.message))
+      }
+    }
+
+    const checkPaymentStatus = async (transaction) => {
+      try {
+        const response = await transactionStore.checkPaymentStatus(transaction.id)
+        
+        if (response.data && response.data.transaction) {
+          alert(`Payment status updated: ${response.data.transaction.status_payment}`)
+        } else {
+          alert('Payment status checked successfully!')
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error)
+        alert('Error checking payment status: ' + (error.response?.data?.message || error.message))
+      }
+    }
+
+    const refreshTransaction = async (transaction) => {
+      try {
+        await transactionStore.refreshTransaction(transaction.id)
+        alert('Transaction data refreshed!')
+      } catch (error) {
+        console.error('Error refreshing transaction:', error)
+        alert('Error refreshing transaction: ' + (error.response?.data?.message || error.message))
       }
     }
 
@@ -362,6 +429,8 @@ export default {
       openPaymentLink,
       closeForm,
       handleSubmit,
+      checkPaymentStatus,
+      refreshTransaction,
       confirmDelete,
       deleteTransaction,
       loadData
