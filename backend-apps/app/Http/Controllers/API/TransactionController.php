@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Transaction;
 use App\Services\PaymentGatewayService;
 
 class TransactionController extends Controller
@@ -299,5 +300,50 @@ class TransactionController extends Controller
             ], 500);
         }
     }
+
+    public function downloadInvoice($id)
+    {
+        try {
+
+            $transaction = Transaction::with(['customer', 'branchStore', 'voucher'])->find($id);
+           
+            if (!$transaction) {
+                return response()->json(['message' => 'Transaction not found'], 404);
+            }
+
+            // Generate invoice PDF
+            $pdf = PDF::loadView('invoices.transaction', [
+                'transaction' => $transaction,
+                'customer' => $transaction->customer,
+                'branchStore' => $transaction->branchStore,
+                'voucher' => $transaction->voucher,
+                'date' => now()->format('Y-m-d H:i:s')
+            ]);
+
+
+            // Set PDF metadata
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOptions([
+                'defaultFont' => 'Arial',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'isPhpEnabled' => true
+            ]);
+
+            // Download the PDF
+            return $pdf->download('invoice_transaction_' . $transaction->id . '.pdf');
+            
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' => 'Failed to download invoice',
+                'error' => $e->getMessage()
+            ], 500);
+
+        } 
+    }
+
+    
 
 }

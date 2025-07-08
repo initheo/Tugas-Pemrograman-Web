@@ -32,6 +32,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('transactions/{id}/payment-status', [App\Http\Controllers\API\TransactionController::class, 'checkPaymentStatus']);
     Route::patch('transactions/{id}/laundry-status', [App\Http\Controllers\API\TransactionController::class, 'updateLaundryStatus']);
 
+    // Download Invoice
+    Route::post('/transactions/{id}/download-invoice', [App\Http\Controllers\API\TransactionController::class, 'downloadInvoice']);
+
     // handle insight dashboard route
     Route::get('/dashboard', function () {
 
