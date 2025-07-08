@@ -9,7 +9,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: 'https://laundrease.tugas1.id',
         changeOrigin: true,
         secure: false,
         configure: (proxy, options) => {
@@ -25,7 +25,7 @@ export default defineConfig({
         }
       },
       '/sanctum': {
-        target: 'http://127.0.0.1:8000',
+        target: 'https://laundrease.tugas1.id',
         changeOrigin: true,
         secure: false,
         configure: (proxy, options) => {
