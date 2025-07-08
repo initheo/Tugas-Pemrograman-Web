@@ -90,5 +90,21 @@ export const transactionService = {
       // Fallback to regular get if refresh endpoint doesn't exist
       return this.getTransaction(id)
     }
+  },
+
+  // Download invoice
+  async downloadInvoice(id) {
+    try {
+      const response = await api.get(`/transactions/${id}/download-invoice`, {
+        responseType: 'blob', // Important untuk file download
+        headers: {
+          'Accept': 'application/pdf'
+        }
+      })
+      return response
+    } catch (error) {
+      console.error('Error downloading invoice:', error)
+      throw new Error(error.response?.data?.message || 'Failed to download invoice')
+    }
   }
 }

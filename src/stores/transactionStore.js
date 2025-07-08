@@ -232,6 +232,26 @@ export const useTransactionStore = defineStore('transaction', {
     // Clear error
     clearError() {
       this.error = null
+    },
+
+    // Download invoice
+    async downloadInvoice(id) {
+      console.log('downloadInvoice called with id:', id)
+      this.loading = true
+      this.error = null
+      
+      try {
+        console.log('Calling transactionService.downloadInvoice...')
+        const response = await transactionService.downloadInvoice(id)
+        this.loading = false
+        console.log('Download response received:', response)
+        return response
+      } catch (error) {
+        this.error = error.message
+        this.loading = false
+        console.error('Failed to download invoice:', error.message)
+        throw error
+      }
     }
   }
 })

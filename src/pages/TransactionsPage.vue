@@ -162,6 +162,17 @@
                 </td>
                 <td class="py-4">
                   <div class="flex items-center space-x-2">
+                    <!-- Download Invoice Button -->
+                    <button
+                      v-if="transaction.status_payment === 'paid'"
+                      @click="downloadInvoice(transaction)"
+                      class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      title="Download Invoice"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
                     <!-- Payment Link Button -->
                     <button
                       v-if="transaction.urlPaymentGateway"
@@ -525,6 +536,79 @@ export default {
       }
     }
 
+    const downloadInvoice = async (transaction) => {
+      if (transaction.status_payment !== 'paid') {
+        alert('Invoice can only be downloaded for paid transactions.')
+        return
+      }
+      
+      try {
+        console.log('Downloading invoice for transaction:', transaction.id)
+        
+        // Get auth token
+        const token = localStorage.getItem('auth_token')
+        
+        if (!token) {
+          alert('You must be logged in to download invoice.')
+          return
+        }
+        
+        // Create download URL
+        const baseURL = 'http://127.0.0.1:8000/api'
+        const downloadUrl = `${baseURL}/transactions/${transaction.id}/download-invoice`
+        
+        console.log('Download URL:', downloadUrl)
+        
+        // Create a temporary link and trigger download
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = `invoice_transaction_${transaction.id}.pdf`
+        link.target = '_blank'
+        
+        // For browsers that support it, we'll try to add auth headers
+        // But since we can't add custom headers to a simple link click,
+        // we'll use fetch first
+        try {
+          const response = await fetch(downloadUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/pdf'
+            }
+          })
+          
+          if (response.ok) {
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            
+            const downloadLink = document.createElement('a')
+            downloadLink.href = url
+            downloadLink.download = `invoice_transaction_${transaction.id}.pdf`
+            downloadLink.style.display = 'none'
+            
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
+            
+            window.URL.revokeObjectURL(url)
+            
+            console.log('Invoice downloaded successfully')
+            alert('Invoice downloaded successfully!')
+          } else {
+            throw new Error(`Server responded with status: ${response.status}`)
+          }
+          
+        } catch (fetchError) {
+          console.error('Fetch failed:', fetchError)
+          alert('Error downloading invoice: ' + fetchError.message)
+        }
+        
+      } catch (error) {
+        console.error('Error downloading invoice:', error)
+        alert('Error downloading invoice. Please try again.')
+      }
+    }
+
     const loadData = async () => {
       if (!transactionStore || !customerStore || !branchStore || !voucherStore) {
         console.error('Stores not properly initialized')
@@ -581,7 +665,8 @@ export default {
       loadData,
       canUpdateLaundryStatus,
       getNextStatusText,
-      updateLaundryStatus
+      updateLaundryStatus,
+      downloadInvoice
     }
   }
 }
