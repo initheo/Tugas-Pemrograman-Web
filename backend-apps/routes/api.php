@@ -33,7 +33,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::patch('transactions/{id}/laundry-status', [App\Http\Controllers\API\TransactionController::class, 'updateLaundryStatus']);
 
     // Download Invoice
-    Route::post('/transactions/{id}/download-invoice', [App\Http\Controllers\API\TransactionController::class, 'downloadInvoice']);
+    Route::get('/transactions/{id}/download-invoice', [App\Http\Controllers\API\TransactionController::class, 'downloadInvoice']);
 
     // handle insight dashboard route
     Route::get('/dashboard', function () {
