@@ -3,7 +3,7 @@ import axios from 'axios'
 // Base URL for the Laravel API
 // Dalam development, gunakan proxy melalui vite config
 // Dalam production, bisa diganti ke URL absolute
-const API_BASE_URL = import.meta.env.DEV ? '/api' : 'http://127.0.0.1:8000/api'
+const API_BASE_URL = 'https://laundrease.tugas1.id/api'
 
 // Create axios instance with default configuration
 const api = axios.create({
