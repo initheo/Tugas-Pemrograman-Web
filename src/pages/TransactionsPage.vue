@@ -554,7 +554,7 @@ export default {
         }
         
         // Create download URL
-        const baseURL = 'http://127.0.0.1:8000/api'
+        const baseURL = 'https://laundrease.tugas1.id/api'
         const downloadUrl = `${baseURL}/transactions/${transaction.id}/download-invoice`
         
         console.log('Download URL:', downloadUrl)
