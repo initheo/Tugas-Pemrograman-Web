@@ -17,7 +17,7 @@
 
       <form @submit.prevent="submitForm" class="space-y-6">
         <!-- Customer Selection -->
-        <div>
+        <div v-if="authService.isAdmin()">
           <label for="customer" class="form-label">Customer *</label>
           <select 
             id="customer" 
@@ -35,6 +35,25 @@
               {{ customer.name }} - {{ customer.email }}
             </option>
           </select>
+          <p v-if="errors.customer_id" class="mt-1 text-sm text-red-500">{{ errors.customer_id }}</p>
+        </div>
+
+        <!-- Customer Info for User Role -->
+        <div v-else-if="authService.isUser()">
+          <label class="form-label">Customer</label>
+          <div class="input-field bg-gray-100">
+            <div v-if="currentCustomer && !currentCustomer._placeholder">
+              <div class="font-medium">{{ currentCustomer.name }}</div>
+              <div class="text-sm text-gray-600">{{ currentCustomer.email }}</div>
+              <div class="text-xs text-green-600 mt-1">✓ Customer profile ready</div>
+            </div>
+            <div v-else-if="currentCustomer && currentCustomer._placeholder" class="text-amber-600">
+              <div class="font-medium">{{ currentCustomer.name }}</div>
+              <div class="text-sm text-gray-600">{{ currentCustomer.email }}</div>
+              <div class="text-xs text-amber-600 mt-1">⚠ No customer profile found. Contact administrator.</div>
+            </div>
+            <div v-else class="text-gray-500">Loading customer data...</div>
+          </div>
           <p v-if="errors.customer_id" class="mt-1 text-sm text-red-500">{{ errors.customer_id }}</p>
         </div>
 
@@ -254,6 +273,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useCustomerStore } from '../stores/customerStore'
 import { useBranchStore } from '../stores/branchStore'
 import { useVoucherStore } from '../stores/voucherStore'
+import { authService } from '../services/authService'
+import api from '../services/api'
 
 export default {
   name: 'TransactionForm',
@@ -284,6 +305,7 @@ export default {
     const selectedVoucher = ref(null)
     const discountAmount = ref(0)
     const errors = ref({})
+    const currentCustomer = ref(null)
 
     // Computed properties
     const customers = computed(() => customerStore.customers || [])
@@ -346,6 +368,41 @@ export default {
     })
 
     // Methods
+    const loadCurrentCustomer = async () => {
+      if (authService.isUser()) {
+        try {
+          console.log('Loading current customer for user...')
+          const response = await api.get('/user/profile')
+          console.log('User profile response:', response.data)
+          
+          // Check if user has a customer profile
+          if (response.data && response.data.data && response.data.data.customer) {
+            currentCustomer.value = response.data.data.customer
+            form.value.customer_id = response.data.data.customer.id
+            console.log('Current customer loaded from profile:', currentCustomer.value)
+          } else {
+            // User doesn't have a customer profile yet
+            console.log('User has no customer profile. Creating placeholder.')
+            const userData = response.data.data.user || response.data.user || authService.getCurrentUser()
+            
+            if (userData) {
+              // Show user data but indicate no customer profile
+              currentCustomer.value = {
+                id: null,
+                name: userData.name,
+                email: userData.email,
+                _placeholder: true // Flag to indicate this is not a real customer record
+              }
+              form.value.customer_id = null
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error)
+          alert('Error loading user profile. Please contact administrator to create your customer profile.')
+        }
+      }
+    }
+
     const applyVoucher = () => {
       if (selectedVoucherId.value) {
         selectedVoucher.value = availableVouchers.value.find(v => v.id === parseInt(selectedVoucherId.value))
@@ -400,9 +457,20 @@ export default {
     const validateForm = () => {
       errors.value = {}
 
-      if (!form.value.customer_id) {
+      // For admin, customer_id is required from dropdown
+      // For user, customer_id should be set automatically, but check if customer profile exists
+      if (authService.isAdmin() && !form.value.customer_id) {
         errors.value.customer_id = 'Customer is required'
+      } else if (authService.isUser()) {
+        if (!currentCustomer.value) {
+          errors.value.customer_id = 'Customer profile not loaded. Please try again.'
+        } else if (currentCustomer.value._placeholder) {
+          errors.value.customer_id = 'You need a customer profile to create transactions. Please contact administrator.'
+        } else if (!form.value.customer_id) {
+          errors.value.customer_id = 'Customer data not loaded properly. Please refresh and try again.'
+        }
       }
+      
       if (!form.value.branch_store_id) {
         errors.value.branch_store_id = 'Branch store is required'
       }
@@ -454,10 +522,29 @@ export default {
     onMounted(async () => {
       try {
         console.log('Loading form data...')
+        
+        // Load customer data for user role
+        if (authService.isUser()) {
+          await loadCurrentCustomer()
+        }
+        
         const results = await Promise.allSettled([
-          customerStore.fetchCustomers(),
+          authService.isAdmin() ? customerStore.fetchCustomers() : Promise.resolve(),
           branchStore.fetchBranches(),
-          voucherStore.fetchVouchers()
+          authService.isUser() ? 
+            // For users, load vouchers from user endpoint
+            (async () => {
+              try {
+                const response = await api.get('/user/vouchers')
+                const vouchersData = response.data.data || response.data
+                voucherStore.vouchers = Array.isArray(vouchersData) ? vouchersData : []
+                console.log('User vouchers loaded:', voucherStore.vouchers.length)
+              } catch (error) {
+                console.error('Error loading user vouchers:', error)
+                voucherStore.vouchers = []
+              }
+            })() :
+            voucherStore.fetchVouchers()
         ])
         
         results.forEach((result, index) => {
@@ -470,6 +557,7 @@ export default {
         })
         
         console.log('Final vouchers in store:', voucherStore.vouchers?.length || 0)
+        console.log('Current customer:', currentCustomer.value)
       } catch (error) {
         console.warn('Some data failed to load:', error)
       }
@@ -480,6 +568,7 @@ export default {
     watch(selectedVoucher, calculateTotal)
 
     return {
+      authService,
       form,
       selectedVoucherId,
       selectedVoucher,
@@ -489,7 +578,9 @@ export default {
       branches,
       vouchers,
       availableVouchers,
+      currentCustomer,
       voucherStore, // Add store access for template
+      loadCurrentCustomer,
       applyVoucher,
       calculateTotal,
       submitForm,

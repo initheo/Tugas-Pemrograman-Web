@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import { authService } from '../services/authService';
 
 defineProps({
   msg: String,
@@ -23,17 +24,34 @@ const publicNavItems = [
 ];
 
 // Navigation items for authenticated users
-const authNavItems = [
+const adminNavItems = [
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/customers', label: 'Customers' },
   { path: '/branches', label: 'Branches' },
   { path: '/vouchers', label: 'Vouchers' },
-  { path: '/transactions', label: 'Transactions' }
+  { path: '/transactions', label: 'Transactions' },
+  { path: '/settings', label: 'Settings' }
 ];
 
-// Computed property to get current nav items based on auth status
+const userNavItems = [
+  { path: '/dashboard', label: 'Dashboard' },
+  { path: '/transactions', label: 'Transaksi Saya' },
+  { path: '/vouchers', label: 'Voucher' }
+];
+
+// Computed property to get current nav items based on auth status and role
 const navItems = computed(() => {
-  return authStore.isAuthenticated ? authNavItems : publicNavItems;
+  if (!authStore.isAuthenticated) {
+    return publicNavItems;
+  }
+  
+  if (authService.isAdmin()) {
+    return adminNavItems;
+  } else if (authService.isUser()) {
+    return userNavItems;
+  }
+  
+  return publicNavItems;
 });
 
 const toggleMobileMenu = () => {
@@ -90,33 +108,19 @@ onUnmounted(() => {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
+          
           <div className="flex items-center">
             <RouterLink to="/" className="flex items-center group">
-              <div
-                className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white mr-3 transition-transform duration-300 group-hover:scale-110"
-              >
+              <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white mr-3 transition-transform duration-300 group-hover:scale-110">
                 <i className="fas fa-tshirt"></i>
               </div>
-              <span
-                className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent"
-                >LaundrEase</span
-              >
+              <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">LaundrEase</span>
             </RouterLink>
           </div>
 
           <!-- Desktop Navigation -->
           <nav className="hidden md:flex space-x-1 lg:space-x-2">
-            <RouterLink
-              v-for="item in navItems"
-              :key="item.path"
-              :to="item.path"
-              class="px-3 py-2 font-medium transition-all duration-300 rounded-md"
-              :class="[
-                $route.path === item.path
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50'
-              ]"
-            >
+            <RouterLink v-for="item in navItems" :key="item.path" :to="item.path" class="px-3 py-2 font-medium transition-all duration-300 rounded-md" :class="[$route.path === item.path ? 'bg-primary-50 text-primary-600' : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50']">
               {{ item.label }}
             </RouterLink>
           </nav>
@@ -161,12 +165,16 @@ onUnmounted(() => {
                         <i class="fas fa-user mr-2"></i>Profile
                       </RouterLink>
                       <RouterLink
+                        v-if="authService.isAdmin()"
                         to="/settings"
                         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                         @click="showUserMenu = false"
                       >
                         <i class="fas fa-cog mr-2"></i>Settings
                       </RouterLink>
+                      <div class="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
+                        Role: {{ authService.getUserRole() || 'guest' }}
+                      </div>
                       <hr class="my-1">
                       <button
                         @click="handleLogout"

@@ -62,6 +62,24 @@ export const authService = {
     return !!(token && user)
   },
 
+  // Check if current user is admin
+  isAdmin() {
+    const user = this.getCurrentUser()
+    return user && user.role === 'admin'
+  },
+
+  // Check if current user is regular user
+  isUser() {
+    const user = this.getCurrentUser()
+    return user && user.role === 'user'
+  },
+
+  // Get user role
+  getUserRole() {
+    const user = this.getCurrentUser()
+    return user ? user.role : null
+  },
+
   // Update user profile
   async updateProfile(profileData) {
     try {

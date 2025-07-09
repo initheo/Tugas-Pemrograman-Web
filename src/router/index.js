@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import { authService } from '../services/authService';
 import DashboardPage from '../pages/DashboardPage.vue';
 import CustomersPage from '../pages/CustomersPage.vue';
 import BranchesPage from '../pages/BranchesPage.vue';
@@ -83,13 +84,13 @@ const router = createRouter({
       path: '/customers',
       name: 'Customers',
       component: CustomersPage,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/branches',
       name: 'Branches',
       component: BranchesPage,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/vouchers',
@@ -113,7 +114,7 @@ const router = createRouter({
       path: '/settings',
       name: 'Settings',
       component: SettingsPage,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
   ],
 });
@@ -136,6 +137,7 @@ router.beforeEach((to, from, next) => {
 
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin);
 
   if (requiresAuth && !authStore.isAuthenticated) {
     console.log('Redirecting to login - auth required but not authenticated')
@@ -147,6 +149,10 @@ router.beforeEach((to, from, next) => {
   } else if (requiresGuest && authStore.isAuthenticated) {
     console.log('Redirecting to dashboard - user already authenticated')
     // Redirect to dashboard if user is already authenticated and trying to access guest pages
+    next('/dashboard');
+  } else if (requiresAdmin && !authService.isAdmin()) {
+    console.log('Redirecting to dashboard - admin access required')
+    // Redirect to dashboard if admin access is required but user is not admin
     next('/dashboard');
   } else {
     console.log('Navigation allowed')

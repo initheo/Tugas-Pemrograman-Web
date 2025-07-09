@@ -90,6 +90,7 @@
                     </svg>
                   </div>
                 </th>
+                <th class="pb-4">User/Role</th>
                 <th class="pb-4">Actions</th>
               </tr>
             </thead>
@@ -98,13 +99,13 @@
                 v-if="customerStore.loading"
                 class="animate-pulse"
               >
-                <td colspan="6" class="py-4 text-center">Loading...</td>
+                <td colspan="7" class="py-4 text-center">Loading...</td>
               </tr>
               <tr
                 v-else-if="paginatedCustomers.length === 0"
                 class="border-t"
               >
-                <td colspan="6" class="py-4 text-center text-gray-500">No data found.</td>
+                <td colspan="7" class="py-4 text-center text-gray-500">No data found.</td>
               </tr>
               <tr
                 v-for="customer in paginatedCustomers"
@@ -113,9 +114,21 @@
               >
                 <td class="py-4">{{ customer.name }}</td>
                 <td>{{ customer.email || 'N/A' }}</td>
-                <td>{{ customer.phone_number }}</td>
-                <td>{{ customer.address }}</td>
+                <td>{{ customer.phone_number || 'N/A' }}</td>
+                <td>{{ customer.address || 'N/A' }}</td>
                 <td>{{ customer.city || 'N/A' }}</td>
+                <td class="py-4">
+                  <div v-if="customer.user">
+                    <span :class="[
+                      'px-2 py-1 text-xs rounded-full',
+                      customer.user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+                    ]">
+                      {{ customer.user.role }}
+                    </span>
+                    <div class="text-xs text-gray-500 mt-1">ID: {{ customer.user.id }}</div>
+                  </div>
+                  <span v-else class="text-gray-400 text-sm">No user linked</span>
+                </td>
                 <td class="flex items-center gap-2 py-4 space-x-2">
                   <!-- Table Actions -->
                   <button
@@ -215,14 +228,56 @@
               <!-- Email Field -->
               <div>
                 <label class="block mb-2 text-sm font-bold text-gray-700">
-                  Email
+                  Email *
                 </label>
                 <input
                   v-model="formData.email"
                   type="email"
+                  required
                   class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter email address (optional)"
+                  placeholder="Enter email address"
                 />
+              </div>
+
+              <!-- Password Field (only for new customers) -->
+              <div v-if="!selectedCustomer">
+                <label class="block mb-2 text-sm font-bold text-gray-700">
+                  Password *
+                </label>
+                <input
+                  v-model="formData.password"
+                  type="password"
+                  required
+                  class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter password"
+                />
+              </div>
+
+              <!-- Password Field (optional for edit) -->
+              <div v-else>
+                <label class="block mb-2 text-sm font-bold text-gray-700">
+                  New Password (Optional)
+                </label>
+                <input
+                  v-model="formData.password"
+                  type="password"
+                  class="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Leave blank to keep current password"
+                />
+              </div>
+
+              <!-- Role Field -->
+              <div>
+                <label class="block mb-2 text-sm font-bold text-gray-700">
+                  Role
+                </label>
+                <select
+                  v-model="formData.role"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
 
               <!-- Phone Field -->
@@ -324,6 +379,8 @@ export default {
     const formData = ref({
       name: '',
       email: '',
+      password: '',
+      role: 'user',
       phone_number: '',
       address: '',
       city: '',
@@ -379,11 +436,22 @@ export default {
     const openModal = (customer = null) => {
       selectedCustomer.value = customer
       if (customer) {
-        formData.value = { ...customer }
+        formData.value = {
+          name: customer.name || '',
+          email: customer.email || '',
+          password: '', // Never pre-fill password
+          role: customer.user?.role || 'user',
+          phone_number: customer.phone_number || '',
+          address: customer.address || '',
+          city: customer.city || '',
+          postal_code: customer.postal_code || ''
+        }
       } else {
         formData.value = {
           name: '',
           email: '',
+          password: '',
+          role: 'user',
           phone_number: '',
           address: '',
           city: '',
@@ -399,6 +467,8 @@ export default {
       formData.value = {
         name: '',
         email: '',
+        password: '',
+        role: 'user',
         phone_number: '',
         address: '',
         city: '',
@@ -408,6 +478,14 @@ export default {
 
     const handleSubmit = async () => {
       try {
+        // Validation for new customer
+        if (!selectedCustomer.value) {
+          if (!formData.value.name || !formData.value.email || !formData.value.password) {
+            alert('Name, Email, and Password are required for new customers!')
+            return
+          }
+        }
+
         if (selectedCustomer.value) {
           // Update existing customer
           await customerStore.updateCustomer(selectedCustomer.value.id, formData.value)
@@ -415,12 +493,23 @@ export default {
         } else {
           // Create new customer
           await customerStore.createCustomer(formData.value)
-          alert('Customer created successfully!')
+          alert('Customer and user created successfully!')
         }
         closeModal()
       } catch (error) {
         console.error('Error saving customer:', error)
-        alert('Error saving customer: ' + error.message)
+        
+        // Handle validation errors
+        if (error.response?.status === 422 && error.response?.data?.errors) {
+          const errors = error.response.data.errors
+          let errorMessage = 'Validation errors:\n'
+          Object.keys(errors).forEach(key => {
+            errorMessage += `- ${key}: ${errors[key][0]}\n`
+          })
+          alert(errorMessage)
+        } else {
+          alert('Error saving customer: ' + (error.response?.data?.message || error.message))
+        }
       }
     }
 

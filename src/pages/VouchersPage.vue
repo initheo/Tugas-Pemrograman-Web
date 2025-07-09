@@ -1,32 +1,66 @@
 <template>
   <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold">Vouchers</h1>
-      <button
-        @click="openCreateForm"
-        class="flex items-center gap-2 px-4 py-2 text-white transition-all duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-      >
-        <svg
-          class="w-5 h-5 mr-2"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    
+
+    <!-- Admin View -->
+    <div v-if="authService.isAdmin()">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold">Vouchers Management</h1>
+        <button
+          @click="openCreateForm"
+          class="flex items-center gap-2 px-4 py-2 text-white transition-all duration-200 bg-blue-600 rounded-lg     return {
+      authService,
+      voucherStore,
+      showForm,
+      selectedVoucher,
+      formMode,
+      searchQuery,
+      itemsPerPage,
+      currentPage,
+      filteredVouchers,
+      activeVouchers,
+      paginatedVouchers,
+      totalPages,
+      openCreateForm,
+      openEditForm,
+      closeForm,
+      handleDelete,
+      formatDate,
+      getVoucherStatus,
+      getStatusClass,
+      loadVouchers
+    }ocus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          />
-        </svg>
-        Add Voucher
-      </button>
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Voucher
+        </button>
+      </div>
+    </div>
+
+    <!-- User View -->
+    <div v-else-if="authService.isUser()">
+      <div class="mb-6">
+        <h1 class="text-2xl font-semibold">Voucher Tersedia</h1>
+        <p class="text-gray-600 mt-2">Dapatkan diskon menarik untuk transaksi laundry Anda</p>
+      </div>
     </div>
 
     <div class="bg-white rounded-lg shadow">
       <div class="p-6">
-        <!-- Search and Items per page -->
-        <div class="flex items-center justify-between mb-4">
+        <!-- Search (for admin) -->
+        <div v-if="authService.isAdmin()" class="flex items-center justify-between mb-4">
           <div class="relative">
             <input
               v-model="searchQuery"
@@ -58,7 +92,8 @@
           </select>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Admin Table View -->
+        <div v-if="authService.isAdmin()" class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="text-sm text-left text-gray-600">
@@ -66,6 +101,7 @@
                 <th class="pb-4">Discount Rate</th>
                 <th class="pb-4">Valid From</th>
                 <th class="pb-4">Valid Until</th>
+                <th class="pb-4">Status</th>
                 <th class="pb-4">Actions</th>
               </tr>
             </thead>
@@ -74,13 +110,13 @@
                 v-if="voucherStore.loading"
                 class="animate-pulse"
               >
-                <td colspan="5" class="py-4 text-center">Loading...</td>
+                <td colspan="6" class="py-4 text-center">Loading...</td>
               </tr>
               <tr
                 v-else-if="voucherStore.vouchers.length === 0"
                 class="border-t"
               >
-                <td colspan="5" class="py-4 text-center text-gray-500">No vouchers found</td>
+                <td colspan="6" class="py-4 text-center text-gray-500">No vouchers found</td>
               </tr>
               <tr
                 v-for="voucher in paginatedVouchers"
@@ -91,6 +127,11 @@
                 <td>{{ voucher.discount_percentage }}%</td>
                 <td>{{ formatDate(voucher.valid_from) }}</td>
                 <td>{{ formatDate(voucher.valid_until) }}</td>
+                <td>
+                  <span :class="getStatusClass(voucher)" class="px-2 py-1 text-xs font-medium rounded-full">
+                    {{ getVoucherStatus(voucher) }}
+                  </span>
+                </td>
                 <td class="flex items-center gap-2 py-4">
                   <button
                     @click="openEditForm(voucher)"
@@ -116,8 +157,84 @@
           </table>
         </div>
 
-        <!-- Pagination -->
-        <div class="flex items-center justify-between mt-4">
+        <!-- User Card View -->
+        <div v-else-if="authService.isUser()" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-if="voucherStore.loading" class="col-span-full text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-2 text-gray-600">Loading vouchers...</p>
+          </div>
+          
+          <div v-else-if="voucherStore.error" class="col-span-full text-center py-8">
+            <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-red-600 mb-2">{{ voucherStore.error }}</p>
+            <button 
+              @click="loadVouchers()" 
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Coba Lagi
+            </button>
+          </div>
+          
+          <div v-else-if="activeVouchers.length === 0 && voucherStore.vouchers.length === 0" class="col-span-full text-center py-8">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            <p class="text-gray-600">Tidak ada voucher yang tersedia saat ini</p>
+          </div>
+          
+          <div v-else-if="activeVouchers.length === 0 && voucherStore.vouchers.length > 0" class="col-span-full text-center py-8">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-gray-600">Semua voucher sedang tidak aktif</p>
+            <p class="text-sm text-gray-500 mt-1">Total voucher tersedia: {{ voucherStore.vouchers.length }}</p>
+          </div>
+
+          <div
+            v-for="voucher in activeVouchers"
+            :key="voucher.id"
+            class="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
+          >
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ voucher.name }}</h3>
+                <div class="flex items-center mb-2">
+                  <span class="text-3xl font-bold text-blue-600">{{ voucher.discount_percentage }}%</span>
+                  <span class="text-gray-600 ml-2">OFF</span>
+                </div>
+              </div>
+              <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                Aktif
+              </div>
+            </div>
+            
+            <div class="space-y-2 text-sm text-gray-600">
+              <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Berlaku hingga: {{ formatDate(voucher.valid_until) }}
+              </div>
+              <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Dapat digunakan untuk transaksi
+              </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-blue-200">
+              <p class="text-xs text-gray-500">
+                Kode voucher akan otomatis diterapkan saat melakukan transaksi
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination (Admin only) -->
+        <div v-if="authService.isAdmin()" class="flex items-center justify-between mt-4">
           <div class="text-sm text-gray-600">
             Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to
             {{ Math.min(currentPage * itemsPerPage, filteredVouchers.length) }} of
@@ -145,9 +262,9 @@
       </div>
     </div>
 
-    <!-- Voucher Form Modal -->
+    <!-- Voucher Form Modal (Admin only) -->
     <div
-      v-if="showForm"
+      v-if="authService.isAdmin() && showForm"
       class="fixed inset-0 flex items-center justify-center bg-black/50"
     >
       <div class="w-full max-w-md p-6 bg-white rounded-lg">
@@ -174,6 +291,8 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useVoucherStore } from '../stores/voucherStore'
+import { authService } from '../services/authService'
+import api from '../services/api'
 import VoucherForm from '../components/VoucherForm.vue'
 
 export default {
@@ -194,13 +313,21 @@ export default {
 
     // Computed properties
     const filteredVouchers = computed(() => {
-      const vouchers = voucherStore.vouchers || []
-      if (!searchQuery.value) return vouchers
-      
-      return vouchers.filter(voucher =>
-        voucher.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        voucher.discount_percentage?.toString().includes(searchQuery.value.toLowerCase())
+      if (!searchQuery.value) return voucherStore.vouchers
+
+      return voucherStore.vouchers.filter(voucher =>
+        voucher.name.toLowerCase().includes(searchQuery.value.toLowerCase())
       )
+    })
+
+    // Active vouchers for user view
+    const activeVouchers = computed(() => {
+      const now = new Date()
+      return voucherStore.vouchers.filter(voucher => {
+        const validUntil = new Date(voucher.valid_until)
+        const validFrom = new Date(voucher.valid_from)
+        return validFrom <= now && validUntil >= now
+      })
     })
 
     const paginatedVouchers = computed(() => {
@@ -246,6 +373,7 @@ export default {
       }
     }
 
+    // Utility functions
     const formatDate = (date) => {
       if (!date) return 'N/A'
       try {
@@ -259,29 +387,73 @@ export default {
       }
     }
 
+    const getVoucherStatus = (voucher) => {
+      const now = new Date()
+      const validFrom = new Date(voucher.valid_from)
+      const validUntil = new Date(voucher.valid_until)
+      
+      if (now < validFrom) return 'Belum Aktif'
+      if (now > validUntil) return 'Kadaluarsa'
+      return 'Aktif'
+    }
+
+    const getStatusClass = (voucher) => {
+      const status = getVoucherStatus(voucher)
+      if (status === 'Aktif') return 'bg-green-100 text-green-800'
+      if (status === 'Kadaluarsa') return 'bg-red-100 text-red-800'
+      return 'bg-yellow-100 text-yellow-800'
+    }
+
     const loadVouchers = async () => {
+      console.log('Loading vouchers for user role:', authService.isUser() ? 'user' : 'admin')
+      
+      // Set loading state
+      voucherStore.loading = true
+      voucherStore.error = null
+      
       try {
-        await voucherStore.fetchVouchers()
-      } catch (error) {
-        console.error('Error loading vouchers:', error)
-        // Set mock data if API fails
-        voucherStore.vouchers = [
-          {
-            id: 1,
-            name: 'New Year Discount',
-            discount_percentage: 20,
-            valid_from: '2024-01-01',
-            valid_until: '2024-01-31'
-          },
-          {
-            id: 2,
-            name: 'Summer Sale',
-            discount_percentage: 15,
-            valid_from: '2024-06-01',
-            valid_until: '2024-08-31'
+        if (authService.isUser()) {
+          // For users, load available vouchers from the user vouchers endpoint
+          console.log('Fetching vouchers from /user/vouchers endpoint for user...')
+          const response = await api.get('/user/vouchers')
+          console.log('User vouchers response:', response.data)
+          
+          // Handle different response structures
+          let vouchersData = []
+          if (response.data && Array.isArray(response.data.data)) {
+            vouchersData = response.data.data
+          } else if (response.data && Array.isArray(response.data)) {
+            vouchersData = response.data
+          } else if (Array.isArray(response.data)) {
+            vouchersData = response.data
           }
-        ]
-        console.log('Using mock data for vouchers')
+          
+          voucherStore.vouchers = vouchersData
+          console.log('Vouchers loaded for user:', vouchersData.length, vouchersData)
+        } else {
+          // For admin, load all vouchers
+          console.log('Fetching vouchers for admin...')
+          await voucherStore.fetchVouchers()
+        }
+        
+        voucherStore.loading = false
+      } catch (error) {
+        voucherStore.loading = false
+        voucherStore.error = error.message
+        console.error('Error loading vouchers:', error)
+        console.error('Full error details:', {
+          message: error.message,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          headers: error.response?.headers
+        })
+        
+        // Show user-friendly error message
+        alert('Gagal memuat data voucher. Silakan coba lagi atau hubungi administrator.')
+        
+        // Set empty array instead of mock data to avoid confusion
+        voucherStore.vouchers = []
       }
     }
 
@@ -291,6 +463,7 @@ export default {
     })
 
     return {
+      authService,
       voucherStore,
       showForm,
       selectedVoucher,
@@ -299,6 +472,7 @@ export default {
       itemsPerPage,
       currentPage,
       filteredVouchers,
+      activeVouchers,
       paginatedVouchers,
       totalPages,
       openCreateForm,
@@ -306,6 +480,8 @@ export default {
       closeForm,
       handleDelete,
       formatDate,
+      getVoucherStatus,
+      getStatusClass,
       loadVouchers
     }
   }

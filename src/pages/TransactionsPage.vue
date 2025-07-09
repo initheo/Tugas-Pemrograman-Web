@@ -1,12 +1,17 @@
 <template>
   <div class="p-6">
+    <!-- Debug Panel for User Role -->
+   
+
     <!-- Error state for store initialization -->
     <div v-if="!transactionStore || !isComponentMounted" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
       <p class="text-yellow-700">Loading component... Please wait.</p>
     </div>
 
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold">Transactions Management</h1>
+      <h1 class="text-2xl font-semibold">
+        {{ authService.isAdmin() ? 'Transactions Management' : 'My Transactions' }}
+      </h1>
       <button @click="openCreateForm" class="flex items-center btn-primary" :disabled="!transactionStore || !isComponentMounted">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -297,6 +302,8 @@ import { useTransactionStore } from '../stores/transactionStore'
 import { useCustomerStore } from '../stores/customerStore'
 import { useBranchStore } from '../stores/branchStore'
 import { useVoucherStore } from '../stores/voucherStore'
+import { authService } from '../services/authService'
+import api from '../services/api'
 import TransactionForm from '../components/TransactionForm.vue'
 
 export default {
@@ -616,12 +623,45 @@ export default {
       }
       
       try {
-        await Promise.allSettled([
-          transactionStore.fetchTransactions(),
-          customerStore.fetchCustomers(),
-          branchStore.fetchBranches(),
-          voucherStore.fetchVouchers()
-        ])
+        if (authService.isAdmin()) {
+          // Admin can see all data
+          await Promise.allSettled([
+            transactionStore.fetchTransactions(),
+            customerStore.fetchCustomers(),
+            branchStore.fetchBranches(),
+            voucherStore.fetchVouchers()
+          ])
+        } else if (authService.isUser()) {
+          // User only sees their own transactions and available branches/vouchers
+          await Promise.allSettled([
+            // User transactions endpoint - will only return user's transactions
+            (async () => {
+              try {
+                const response = await api.get('/user/transactions')
+                const transactionsData = response.data.data || response.data
+                transactionStore.transactions = Array.isArray(transactionsData) ? transactionsData : []
+                console.log('User transactions loaded:', transactionStore.transactions.length)
+              } catch (error) {
+                console.error('Error loading user transactions:', error)
+                transactionStore.transactions = []
+              }
+            })(),
+            // Load branches for user
+            branchStore.fetchBranches(),
+            // Load vouchers for user
+            (async () => {
+              try {
+                const response = await api.get('/user/vouchers')
+                const vouchersData = response.data.data || response.data
+                voucherStore.vouchers = Array.isArray(vouchersData) ? vouchersData : []
+                console.log('User vouchers loaded:', voucherStore.vouchers.length)
+              } catch (error) {
+                console.error('Error loading user vouchers:', error)
+                voucherStore.vouchers = []
+              }
+            })()
+          ])
+        }
       } catch (error) {
         console.error('Error loading data:', error)
       }
@@ -639,6 +679,7 @@ export default {
     })
 
     return {
+      authService,
       transactionStore,
       customerStore,
       branchStore,
