@@ -1,7 +1,21 @@
 <template>
   <div class="p-6">
     <!-- Debug Panel for User Role -->
-   
+    <div v-if="authService.isUser()" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+      <h3 class="font-semibold mb-2">Debug Info (User Role):</h3>
+      <p><strong>Role:</strong> {{ authService.getUserRole() }}</p>
+      <p><strong>User ID:</strong> {{ authService.getCurrentUser()?.id }}</p>
+      <p><strong>User Name:</strong> {{ authService.getCurrentUser()?.name }}</p>
+      <p><strong>Transactions Loaded:</strong> {{ transactionStore?.transactions?.length || 0 }}</p>
+      <p><strong>Branches Loaded:</strong> {{ branchStore?.branches?.length || 0 }}</p>
+      <p><strong>Vouchers Loaded:</strong> {{ voucherStore?.vouchers?.length || 0 }}</p>
+      <button 
+        @click="loadData()" 
+        class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs"
+      >
+        Reload Data
+      </button>
+    </div>
 
     <!-- Error state for store initialization -->
     <div v-if="!transactionStore || !isComponentMounted" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -622,45 +636,112 @@ export default {
         return
       }
       
+      console.log('Loading data for role:', authService.getUserRole())
+      
       try {
         if (authService.isAdmin()) {
           // Admin can see all data
+          console.log('Loading admin data...')
           await Promise.allSettled([
             transactionStore.fetchTransactions(),
             customerStore.fetchCustomers(),
             branchStore.fetchBranches(),
             voucherStore.fetchVouchers()
           ])
+          console.log('Admin data loaded')
         } else if (authService.isUser()) {
+          console.log('Loading user data...')
+          const user = authService.getCurrentUser()
+          console.log('Current user:', user)
+          
           // User only sees their own transactions and available branches/vouchers
           await Promise.allSettled([
             // User transactions endpoint - will only return user's transactions
             (async () => {
               try {
+                console.log('Fetching user transactions...')
                 const response = await api.get('/user/transactions')
+                console.log('User transactions response:', response.data)
+                
                 const transactionsData = response.data.data || response.data
                 transactionStore.transactions = Array.isArray(transactionsData) ? transactionsData : []
+                transactionStore.loading = false
                 console.log('User transactions loaded:', transactionStore.transactions.length)
               } catch (error) {
                 console.error('Error loading user transactions:', error)
                 transactionStore.transactions = []
+                transactionStore.loading = false
+                
+                // If endpoint doesn't exist, try to filter from all transactions
+                try {
+                  console.log('Trying to fetch all transactions and filter...')
+                  await transactionStore.fetchTransactions()
+                  const allTransactions = transactionStore.transactions || []
+                  const userTransactions = allTransactions.filter(transaction => {
+                    return transaction.user_id === user.id || 
+                           transaction.customer?.user_id === user.id
+                  })
+                  transactionStore.transactions = userTransactions
+                  console.log('Filtered user transactions:', userTransactions.length)
+                } catch (fallbackError) {
+                  console.error('Fallback also failed:', fallbackError)
+                }
               }
             })(),
             // Load branches for user
-            branchStore.fetchBranches(),
+            (async () => {
+              try {
+                console.log('Fetching branches for user...')
+                const response = await api.get('/user/branches')
+                console.log('User branches response:', response.data)
+                
+                const branchesData = response.data.data || response.data
+                branchStore.branches = Array.isArray(branchesData) ? branchesData : []
+                branchStore.loading = false
+                console.log('User branches loaded:', branchStore.branches.length)
+              } catch (error) {
+                console.error('Error loading user branches:', error)
+                branchStore.branches = []
+                branchStore.loading = false
+                
+                // Fallback: try to load from admin endpoint (if accessible)
+                try {
+                  console.log('Trying fallback branches endpoint...')
+                  await branchStore.fetchBranches()
+                  console.log('Fallback branches loaded:', branchStore.branches?.length || 0)
+                } catch (fallbackError) {
+                  console.error('Fallback branches loading failed:', fallbackError)
+                }
+              }
+            })(),
             // Load vouchers for user
             (async () => {
               try {
+                console.log('Fetching user vouchers...')
                 const response = await api.get('/user/vouchers')
+                console.log('User vouchers response:', response.data)
+                
                 const vouchersData = response.data.data || response.data
                 voucherStore.vouchers = Array.isArray(vouchersData) ? vouchersData : []
+                voucherStore.loading = false
                 console.log('User vouchers loaded:', voucherStore.vouchers.length)
               } catch (error) {
                 console.error('Error loading user vouchers:', error)
                 voucherStore.vouchers = []
+                voucherStore.loading = false
+                
+                // Fallback: try to load from admin endpoint (if accessible)
+                try {
+                  console.log('Trying fallback vouchers endpoint...')
+                  await voucherStore.fetchVouchers()
+                  console.log('Fallback vouchers loaded:', voucherStore.vouchers?.length || 0)
+                } catch (fallbackError) {
+                  console.error('Fallback vouchers loading failed:', fallbackError)
+                }
               }
             })()
           ])
+          console.log('User data loading completed')
         }
       } catch (error) {
         console.error('Error loading data:', error)

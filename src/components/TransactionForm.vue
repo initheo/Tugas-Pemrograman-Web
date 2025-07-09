@@ -530,7 +530,27 @@ export default {
         
         const results = await Promise.allSettled([
           authService.isAdmin() ? customerStore.fetchCustomers() : Promise.resolve(),
-          branchStore.fetchBranches(),
+          // Load branches based on user role
+          authService.isUser() ? 
+            // For users, load branches from user endpoint
+            (async () => {
+              try {
+                const response = await api.get('/user/branches')
+                const branchesData = response.data.data || response.data
+                branchStore.branches = Array.isArray(branchesData) ? branchesData : []
+                console.log('User branches loaded:', branchStore.branches.length)
+              } catch (error) {
+                console.error('Error loading user branches:', error)
+                branchStore.branches = []
+                // Fallback to admin endpoint if needed
+                try {
+                  await branchStore.fetchBranches()
+                } catch (fallbackError) {
+                  console.error('Fallback branch loading failed:', fallbackError)
+                }
+              }
+            })() :
+            branchStore.fetchBranches(),
           authService.isUser() ? 
             // For users, load vouchers from user endpoint
             (async () => {

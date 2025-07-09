@@ -73,6 +73,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/user/dashboard', [App\Http\Controllers\API\UserDashboardController::class, 'getDashboardStats']);
         Route::get('/user/transactions', [App\Http\Controllers\API\UserDashboardController::class, 'getUserTransactions']);
         Route::get('/user/vouchers', [App\Http\Controllers\API\UserDashboardController::class, 'getAvailableVouchers']);
+        Route::get('/user/branches', [App\Http\Controllers\API\UserDashboardController::class, 'getAvailableBranches']);
         
         // User can get their own customer profile
         Route::get('/user/profile', [App\Http\Controllers\API\UserDashboardController::class, 'getUserProfile']);

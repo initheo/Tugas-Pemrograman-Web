@@ -111,7 +111,7 @@ class UserDashboardController extends Controller
         $transactions = Transaction::where('customer_id', $customer->id)
                                  ->with(['customer', 'branchStore', 'voucher'])
                                  ->orderBy('transaction_date', 'desc')
-                                 ->paginate(10);
+                                 ->get();
 
         return response()->json([
             'message' => 'User transactions',
@@ -122,16 +122,35 @@ class UserDashboardController extends Controller
     /**
      * Get available vouchers for user
      */
-    public function getAvailableVouchers()
+    public function getAvailableVouchers(Request $request)
     {
-        $vouchers = Voucher::where('valid_until', '>=', now())
-                          ->orderBy('discount_percentage', 'desc')
+        $vouchers = Voucher::where('valid_until', '>', now())
+                          ->where('valid_from', '<=', now())
                           ->get();
 
         return response()->json([
             'message' => 'Available vouchers',
             'data' => $vouchers
         ]);
+    }
+
+    /**
+     * Get available branches for user
+     */
+    public function getAvailableBranches(Request $request)
+    {
+        try {
+            $branches = \App\Models\BranchStore::all();
+
+            return response()->json([
+                'message' => 'Available branches',
+                'data' => $branches
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error retrieving branches: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
