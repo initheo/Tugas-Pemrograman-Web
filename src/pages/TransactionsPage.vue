@@ -26,6 +26,16 @@
       </button>
     </div>
 
+    <!-- Role Information -->
+    <div v-if="authStore.isUser" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <div class="flex items-center text-blue-700">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-sm">You can view your transactions and payment status. Laundry status updates are managed by admin.</span>
+      </div>
+    </div>
+
     <!-- Transaction list table -->
     <div class="bg-white rounded-lg shadow">
       <div class="p-6">
@@ -162,9 +172,9 @@
                       {{ transaction.status_laundry }}
                     </span>
                     
-                    <!-- Status Update Button -->
+                    <!-- Status Update Button - Admin Only -->
                     <button
-                      v-if="canUpdateLaundryStatus(transaction.status_laundry)"
+                      v-if="authStore.isAdmin && canUpdateLaundryStatus(transaction.status_laundry)"
                       @click="updateLaundryStatus(transaction)"
                       :class="[
                         'ml-2 px-2 py-1 text-xs rounded-lg transition-colors',
@@ -177,6 +187,11 @@
                     >
                       {{ getNextStatusText(transaction.status_laundry) }}
                     </button>
+                    
+                    <!-- Status Info for Users -->
+                    <div v-else-if="authStore.isUser && canUpdateLaundryStatus(transaction.status_laundry)" class="ml-2 text-xs text-gray-500">
+                      {{ getStatusInfoForUser(transaction.status_laundry) }}
+                    </div>
                   </div>
                 </td>
                 <td class="py-4">
@@ -227,11 +242,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     </button>
-                    <!-- Delete Button -->
+                    <!-- Delete Button - Admin Only -->
                     <button
+                      v-if="authStore.isAdmin"
                       @click="confirmDelete(transaction)"
                       class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete"
+                      title="Delete Transaction"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -515,6 +531,12 @@ export default {
       return currentStatus
     }
 
+    const getStatusInfoForUser = (currentStatus) => {
+      if (currentStatus === 'pending') return 'Waiting to start'
+      if (currentStatus === 'processing') return 'In progress'
+      return ''
+    }
+
     const updateLaundryStatus = async (transaction) => {
       if (!transactionStore || !isComponentMounted.value) {
         alert('Component not ready. Please try again.')
@@ -791,6 +813,7 @@ export default {
       loadData,
       canUpdateLaundryStatus,
       getNextStatusText,
+      getStatusInfoForUser,
       updateLaundryStatus,
       downloadInvoice
     }
