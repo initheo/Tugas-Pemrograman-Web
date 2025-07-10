@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Hash;
 class ApiController extends Controller
 {
 
-  
+
   public function login(Request $request)
   {
- 
+
     $request->validate([
       'email' => 'required|email|string',
       'password' => 'required|string|min:8'
@@ -50,6 +50,76 @@ class ApiController extends Controller
   }
 
 
+  public function register(Request $request)
+  {
+    try {
+
+      // Make validation with support to insert to customers and users table
+      $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8|confirmed',
+        'phone' => 'nullable|string|max:20',
+        'address' => 'nullable|string|max:500',
+      ]);
+
+      // Log registration attempt
+      Log::info('Registration attempt for email: ' . $request->email);
+
+      // Create user with default role 'customer'
+      $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role' => 'user', // Set default role
+      ]);
+
+      // Create customer profile
+      $customer = new \App\Models\Customer();
+      $customer->user_id = $user->id;
+      $customer->name = $request->name;
+      $customer->email = $request->email;
+      $customer->phone = $request->phone;
+      $customer->address = $request->address;
+      $customer->save();
+
+      // Create authentication token
+      $token = $user->createToken('auth:sanctum')->plainTextToken;
+
+      // Log successful registration
+      Log::info('User registered successfully: ' . $user->id);
+
+      // Return success response with user data and token
+      return response()->json([
+        'message' => 'Registration successful',
+        'data' => [
+          'user' => $user,
+          'customer' => $customer
+        ],
+        'access-token' => $token,
+        'token-type' => 'Bearer',
+        'role' => $user->role
+      ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+      // Return validation errors
+      return response()->json([
+        'message' => 'Validation failed',
+        'errors' => $e->errors()
+      ], 422);
+
+    } catch (\Exception $e) {
+      // Log error and return generic error response
+      Log::error('Registration failed: ' . $e->getMessage());
+
+      return response()->json([
+        'message' => 'Registration failed',
+        'error' => 'Something went wrong. Please try again.'
+      ], 500);
+    }
+  }
+
+
   public function logout(Request $request)
   {
 
@@ -70,7 +140,7 @@ class ApiController extends Controller
 
       // Get authenticated user
       $user = $request->user();
-      
+
       // Log the update attempt
       Log::info('Profile update attempt for user: ' . $user->id, [
         'old_name' => $user->name,
@@ -88,7 +158,6 @@ class ApiController extends Controller
         'message' => 'Profile updated successfully',
         'data' => $user->fresh() // Get fresh data from database
       ]);
-
     } catch (\Illuminate\Validation\ValidationException $e) {
       return response()->json([
         'message' => 'Validation failed',
@@ -96,7 +165,7 @@ class ApiController extends Controller
       ], 422);
     } catch (\Exception $e) {
       Log::error('Profile update failed: ' . $e->getMessage());
-      
+
       return response()->json([
         'message' => 'Failed to update profile',
         'error' => $e->getMessage()
@@ -115,7 +184,7 @@ class ApiController extends Controller
 
       // Get authenticated user
       $user = $request->user();
-      
+
       // Log the password change attempt
       Log::info('Password change attempt for user: ' . $user->id);
 
@@ -142,7 +211,6 @@ class ApiController extends Controller
       return response()->json([
         'message' => 'Password changed successfully'
       ]);
-
     } catch (\Illuminate\Validation\ValidationException $e) {
       return response()->json([
         'message' => 'Validation failed',
@@ -150,12 +218,11 @@ class ApiController extends Controller
       ], 422);
     } catch (\Exception $e) {
       Log::error('Password change failed: ' . $e->getMessage());
-      
+
       return response()->json([
         'message' => 'Failed to change password',
         'error' => $e->getMessage()
       ], 500);
     }
   }
-
 }

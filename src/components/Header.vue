@@ -28,6 +28,7 @@ const adminNavItems = [
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/customers', label: 'Customers' },
   { path: '/branches', label: 'Branches' },
+  { path: '/services-management', label: 'Services' },
   { path: '/vouchers', label: 'Vouchers' },
   { path: '/transactions', label: 'Transactions' },
   { path: '/settings', label: 'Settings' }
@@ -35,6 +36,7 @@ const adminNavItems = [
 
 const userNavItems = [
   { path: '/dashboard', label: 'Dashboard' },
+  { path: '/services-management', label: 'Services' },
   { path: '/transactions', label: 'Transaksi Saya' },
   { path: '/vouchers', label: 'Voucher' }
 ];

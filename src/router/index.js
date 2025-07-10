@@ -6,6 +6,7 @@ import CustomersPage from '../pages/CustomersPage.vue';
 import BranchesPage from '../pages/BranchesPage.vue';
 import VouchersPage from '../pages/VouchersPage.vue';
 import TransactionsPage from '../pages/TransactionsPage.vue';
+import ServicesPage from '../pages/ServicesPage.vue';
 import ProfilePage from '../pages/ProfilePage.vue';
 import SettingsPage from '../pages/SettingsPage.vue';
 import LoginPage from '../pages/LoginPage.vue';
@@ -96,6 +97,12 @@ const router = createRouter({
       path: '/vouchers',
       name: 'Vouchers',
       component: VouchersPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/services-management',
+      name: 'ServicesManagement',
+      component: ServicesPage,
       meta: { requiresAuth: true }
     },
     {

@@ -8,6 +8,7 @@ use App\Http\Controllers\API\ApiController;
 use App\Http\Controllers\API\PegawaiController;
 
 
+Route::post('register', [ApiController::class, 'register']);
 Route::post('login', [ApiController::class, 'login']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
@@ -78,6 +79,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         // User can get their own customer profile
         Route::get('/user/profile', [App\Http\Controllers\API\UserDashboardController::class, 'getUserProfile']);
     });
+
+    // Endpoint Service
+    Route::resource('services', App\Http\Controllers\API\ServiceController::class);
 
     // Shared routes (both admin and user)
     Route::resource('transactions', App\Http\Controllers\API\TransactionController::class);

@@ -29,7 +29,7 @@ class CreateTransactionsTable extends Migration
             $table->string('payment_session_id')->nullable();
             $table->string('payment_reference_id')->nullable();
             $table->string('payment_method');
-            $table->text('notes')->nullable();
+            $table->text('notes')->nullable(); 
             $table->foreign('voucher_id')->references('id')->on('vouchers')->onDelete('set null');
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
             $table->foreign('branch_store_id')->references('id')->on('branch_stores')->onDelete('cascade');
