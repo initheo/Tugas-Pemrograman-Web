@@ -1,22 +1,6 @@
 <template>
   <div class="p-6">
-    <!-- Debug Panel for User Role -->
-    <div v-if="authService.isUser()" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-      <h3 class="font-semibold mb-2">Debug Info (User Role):</h3>
-      <p><strong>Role:</strong> {{ authService.getUserRole() }}</p>
-      <p><strong>User ID:</strong> {{ authService.getCurrentUser()?.id }}</p>
-      <p><strong>User Name:</strong> {{ authService.getCurrentUser()?.name }}</p>
-      <p><strong>Transactions Loaded:</strong> {{ transactionStore?.transactions?.length || 0 }}</p>
-      <p><strong>Branches Loaded:</strong> {{ branchStore?.branches?.length || 0 }}</p>
-      <p><strong>Vouchers Loaded:</strong> {{ voucherStore?.vouchers?.length || 0 }}</p>
-      <button 
-        @click="loadData()" 
-        class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs"
-      >
-        Reload Data
-      </button>
-    </div>
-
+  
     <!-- Error state for store initialization -->
     <div v-if="!transactionStore || !isComponentMounted" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
       <p class="text-yellow-700">Loading component... Please wait.</p>

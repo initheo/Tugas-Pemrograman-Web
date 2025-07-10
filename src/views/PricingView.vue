@@ -35,398 +35,250 @@
       </div>
     </section>
 
-    <!-- Pricing Toggle Section -->
-    <section class="py-12 bg-white">
-      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col items-center justify-center mb-12 reveal">
-          <div class="flex items-center space-x-4">
-            <span class="text-lg font-medium" :class="{ 'text-primary-600': !isYearly, 'text-secondary-700': isYearly }">
-              Bulanan
-            </span>
-            <label class="pricing-toggle">
-              <input 
-                type="checkbox" 
-                id="pricing-toggle" 
-                v-model="isYearly"
-                @change="togglePrice"
-              />
-              <span class="pricing-slider"></span>
-            </label>
-            <div class="flex items-center">
-              <span class="text-lg font-medium" :class="{ 'text-primary-600': isYearly, 'text-secondary-700': !isYearly }">
-                Tahunan
-              </span>
-              <span class="ml-2 px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
-                Hemat 20%
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    
 
     <!-- Pricing Plans Section -->
-    <section className="py-12 bg-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          <!-- Basic Plan -->
-          <div
-            className="bg-white rounded-2xl shadow-lg border border-secondary-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 reveal"
-          >
-            <div className="p-8 border-b border-secondary-100">
-              <h3 className="text-xl font-bold text-secondary-900 mb-2">
-                Paket Dasar
-              </h3>
-              <p className="text-secondary-600 mb-6">
-                Ideal untuk individu dengan kebutuhan laundry sederhana
-              </p>
-              <div className="flex items-baseline">
-                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': isYearly }">
-                  Rp 199.000
-                </span>
-                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': !isYearly }">
-                  Rp 1.910.000
-                </span>
-                <span className="text-secondary-500 ml-2">{{ isYearly ? '/tahun' : '/bulan' }}</span>
-              </div>
-              <p className="text-sm text-secondary-500 mt-2">
-                Atau mulai dari Rp 50.000 per pengambilan
-              </p>
-            </div>
-            <div className="p-8">
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>5 kg laundry per minggu</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Layanan cuci & lipat standar</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Pengambilan & pengantaran 1x seminggu</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Waktu penyelesaian 48 jam</span>
-                </li>
-                <li className="flex items-start text-secondary-400">
-                  <i className="fas fa-times-circle mt-1 mr-3"></i>
-                  <span>Layanan cuci kering premium</span>
-                </li>
-                <li className="flex items-start text-secondary-400">
-                  <i className="fas fa-times-circle mt-1 mr-3"></i>
-                  <span>Layanan setrika</span>
-                </li>
-                <li className="flex items-start text-secondary-400">
-                  <i className="fas fa-times-circle mt-1 mr-3"></i>
-                  <span>Pengambilan darurat</span>
-                </li>
-              </ul>
-              <a
-                href="#"
-                className="mt-8 block w-full py-3 px-6 text-center bg-white border-2 border-primary-600 text-primary-600 font-medium rounded-md hover:bg-primary-50 transition-all duration-300"
-              >
-                Pilih Paket
-              </a>
-            </div>
-          </div>
-
-          <!-- Premium Plan -->
-          <div
-            className="bg-white rounded-2xl shadow-xl border-2 border-primary-500 overflow-hidden transform scale-105 md:scale-100 md:transform-none lg:scale-105 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 reveal"
-          >
-            <div
-              className="bg-primary-600 text-white text-center py-2 text-sm font-medium"
-            >
-              PALING POPULER
-            </div>
-            <div className="p-8 border-b border-secondary-100">
-              <h3 className="text-xl font-bold text-secondary-900 mb-2">
-                Paket Premium
-              </h3>
-              <p className="text-secondary-600 mb-6">
-                Sempurna untuk keluarga kecil atau pasangan
-              </p>
-              <div className="flex items-baseline">
-                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': isYearly }">
-                  Rp 349.000
-                </span>
-                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': !isYearly }">
-                  Rp 3.350.000
-                </span>
-                <span className="text-secondary-500 ml-2">{{ isYearly ? '/tahun' : '/bulan' }}</span>
-              </div>
-              <p className="text-sm text-secondary-500 mt-2">
-                Atau mulai dari Rp 80.000 per pengambilan
-              </p>
-            </div>
-            <div className="p-8">
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>10 kg laundry per minggu</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Layanan cuci & lipat standar</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Pengambilan & pengantaran 2x seminggu</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Waktu penyelesaian 24 jam</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Layanan cuci kering premium</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Layanan setrika</span>
-                </li>
-                <li className="flex items-start text-secondary-400">
-                  <i className="fas fa-times-circle mt-1 mr-3"></i>
-                  <span>Pengambilan darurat</span>
-                </li>
-              </ul>
-              <a
-                href="#"
-                className="mt-8 block w-full py-3 px-6 text-center bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300"
-              >
-                Pilih Paket
-              </a>
-            </div>
-          </div>
-
-          <!-- Ultimate Plan -->
-          <div
-            className="bg-white rounded-2xl shadow-lg border border-secondary-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 reveal"
-          >
-            <div className="p-8 border-b border-secondary-100">
-              <h3 className="text-xl font-bold text-secondary-900 mb-2">
-                Paket Ultimate
-              </h3>
-              <p className="text-secondary-600 mb-6">
-                Solusi lengkap untuk keluarga besar
-              </p>
-              <div className="flex items-baseline">
-                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': isYearly }">
-                  Rp 599.000
-                </span>
-                <span className="text-4xl font-bold text-primary-600" :class="{ 'hidden': !isYearly }">
-                  Rp 5.750.000
-                </span>
-                <span className="text-secondary-500 ml-2">{{ isYearly ? '/tahun' : '/bulan' }}</span>
-              </div>
-              <p className="text-sm text-secondary-500 mt-2">
-                Atau mulai dari Rp 120.000 per pengambilan
-              </p>
-            </div>
-            <div className="p-8">
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>20 kg laundry per minggu</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Layanan cuci & lipat standar</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Pengambilan & pengantaran 3x seminggu</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Waktu penyelesaian 24 jam</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Layanan cuci kering premium</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Layanan setrika</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle text-primary-500 mt-1 mr-3"></i>
-                  <span>Pengambilan darurat</span>
-                </li>
-              </ul>
-              <a
-                href="#"
-                className="mt-8 block w-full py-3 px-6 text-center bg-white border-2 border-primary-600 text-primary-600 font-medium rounded-md hover:bg-primary-50 transition-all duration-300"
-              >
-                Pilih Paket
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features Comparison -->
-    <section className="py-20 bg-secondary-50">
+       <!-- Pricing Section -->
+    <section id="pricing" className="py-20 bg-secondary-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 reveal">
-          <span
-            className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-4"
-            >Perbandingan Fitur</span
-          >
+           
           <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4">
-            Bandingkan Semua Fitur
+            Harga yang Sederhana dan Transparan
           </h2>
           <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-            Lihat perbandingan lengkap dari semua paket kami untuk membantu Anda
-            memilih yang paling sesuai dengan kebutuhan Anda.
+            Pilih layanan yang sesuai dengan kebutuhan laundry Anda.
           </p>
         </div>
 
-        <div className="overflow-x-auto reveal">
-          <table className="w-full bg-white rounded-xl shadow-lg">
-            <thead>
-              <tr className="bg-secondary-50 border-b border-secondary-200">
-                <th
-                  className="py-4 px-6 text-left text-secondary-900 font-semibold"
-                >
-                  Fitur
-                </th>
-                <th
-                  className="py-4 px-6 text-center text-secondary-900 font-semibold"
-                >
-                  Paket Dasar
-                </th>
-                <th
-                  className="py-4 px-6 text-center text-primary-600 font-semibold"
-                >
-                  Paket Premium
-                </th>
-                <th
-                  className="py-4 px-6 text-center text-secondary-900 font-semibold"
-                >
-                  Paket Ultimate
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Kapasitas Mingguan
-                </td>
-                <td className="py-4 px-6 text-center">5 kg</td>
-                <td className="py-4 px-6 text-center bg-primary-50">10 kg</td>
-                <td className="py-4 px-6 text-center">20 kg</td>
-              </tr>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Frekuensi Pengambilan
-                </td>
-                <td className="py-4 px-6 text-center">1x seminggu</td>
-                <td className="py-4 px-6 text-center bg-primary-50">2x seminggu</td>
-                <td className="py-4 px-6 text-center">3x seminggu</td>
-              </tr>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Waktu Penyelesaian
-                </td>
-                <td className="py-4 px-6 text-center">48 jam</td>
-                <td className="py-4 px-6 text-center bg-primary-50">24 jam</td>
-                <td className="py-4 px-6 text-center">24 jam</td>
-              </tr>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Layanan Cuci Kering
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <i className="fas fa-times text-secondary-400"></i>
-                </td>
-                <td className="py-4 px-6 text-center bg-primary-50">
-                  <i className="fas fa-check text-primary-500"></i>
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <i className="fas fa-check text-primary-500"></i>
-                </td>
-              </tr>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Layanan Setrika
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <i className="fas fa-times text-secondary-400"></i>
-                </td>
-                <td className="py-4 px-6 text-center bg-primary-50">
-                  <i className="fas fa-check text-primary-500"></i>
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <i className="fas fa-check text-primary-500"></i>
-                </td>
-              </tr>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Pengambilan Darurat
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <i className="fas fa-times text-secondary-400"></i>
-                </td>
-                <td className="py-4 px-6 text-center bg-primary-50">
-                  <i className="fas fa-times text-secondary-400"></i>
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <i className="fas fa-check text-primary-500"></i>
-                </td>
-              </tr>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Perlakuan Khusus
-                </td>
-                <td className="py-4 px-6 text-center">Biaya tambahan</td>
-                <td className="py-4 px-6 text-center bg-primary-50">Diskon 10%</td>
-                <td className="py-4 px-6 text-center">Diskon 20%</td>
-              </tr>
-              <tr className="border-b border-secondary-100">
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Dukungan Pelanggan
-                </td>
-                <td className="py-4 px-6 text-center">Jam kerja</td>
-                <td className="py-4 px-6 text-center bg-primary-50">
-                  Jam kerja diperpanjang
-                </td>
-                <td className="py-4 px-6 text-center">24/7</td>
-              </tr>
-              <tr>
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Harga Bulanan
-                </td>
-                <td className="py-4 px-6 text-center font-semibold">Rp 199.000</td>
-                <td className="py-4 px-6 text-center font-semibold bg-primary-50">
-                  Rp 349.000
-                </td>
-                <td className="py-4 px-6 text-center font-semibold">Rp 599.000</td>
-              </tr>
-              <tr>
-                <td className="py-4 px-6 text-secondary-800 font-medium">
-                  Harga Tahunan
-                </td>
-                <td className="py-4 px-6 text-center font-semibold">
-                  Rp 1.910.000
-                </td>
-                <td className="py-4 px-6 text-center font-semibold bg-primary-50">
-                  Rp 3.350.000
-                </td>
-                <td className="py-4 px-6 text-center font-semibold">
-                  Rp 5.750.000
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+          <!-- Paket Dasar -->
+          <div
+            className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-secondary-100 group reveal"
+          >
+            <div className="p-8 border-b border-secondary-100">
+              <h3
+                className="text-2xl font-bold text-secondary-900 mb-2 group-hover:text-primary-600 transition-colors duration-300"
+              >
+                Cuci dan Lipat
+              </h3>
+              <p className="text-secondary-600">Cocok untuk individu</p>
+              <div className="mt-6 flex items-end">
+                <span className="text-5xl font-bold text-primary-600">25k</span>
+                <span className="text-secondary-600 ml-2">/kg</span>
+              </div>
+              
+            </div>
+            <div className="p-8">
+              <ul className="space-y-4">
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Penjemputan & pengantaran mingguan</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Layanan cuci & lipat</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Proses dalam 48 jam</span>
+                </li>
+                <li className="flex items-center text-secondary-400">
+                  <div
+                    className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-times text-red-600 text-sm"></i>
+                  </div>
+                  <span>Cuci kering</span>
+                </li>
+                <li className="flex items-center text-secondary-400">
+                  <div
+                    className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-times text-red-600 text-sm"></i>
+                  </div>
+                  <span>Layanan ekspres</span>
+                </li>
+              </ul>
+              <a
+                href="#"
+                className="mt-8 block text-center bg-primary-600 text-white px-6 py-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:-translate-y-1"
+                >Pilih Paket</a
+              >
+            </div>
+          </div>
+
+          <!-- Paket Premium -->
+          <div
+            className="bg-white rounded-xl overflow-hidden shadow-xl border-2 border-primary-500 transform md:-translate-y-4 scale-105 z-10 reveal"
+          >
+            <div
+              className="bg-primary-600 text-white text-center py-2 text-sm font-semibold"
+            >
+              PAKET PALING POPULER
+            </div>
+            <div className="p-8 border-b border-secondary-100">
+              <h3 className="text-2xl font-bold text-secondary-900 mb-2">
+                Cuci Kering
+              </h3>
+              <p className="text-secondary-600">Ideal untuk pasangan & keluarga</p>
+              <div className="mt-6 flex items-end">
+                <span className="text-5xl font-bold text-primary-600">30k</span>
+                <span className="text-secondary-600 ml-2">/kg</span>
+              </div>
+               
+            </div>
+            <div className="p-8">
+              <ul className="space-y-4">
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Penjemputan & pengantaran dua minggu sekali</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Layanan cuci & lipat</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Proses dalam 24 jam</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Cuci kering dasar (5 item)</span>
+                </li>
+                <li className="flex items-center text-secondary-400">
+                  <div
+                    className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-times text-red-600 text-sm"></i>
+                  </div>
+                  <span>Layanan ekspres</span>
+                </li>
+              </ul>
+              <a
+                href="#"
+                className="mt-8 block text-center bg-primary-600 text-white px-6 py-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                >Pilih Paket</a
+              >
+            </div>
+          </div>
+
+          <!-- Paket Ultimate -->
+          <div
+            className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-secondary-100 group reveal"
+          >
+            <div className="p-8 border-b border-secondary-100">
+              <h3
+                className="text-2xl font-bold text-secondary-900 mb-2 group-hover:text-primary-600 transition-colors duration-300"
+              >
+                 Setrika & Pres
+              </h3>
+              <p className="text-secondary-600">Untuk keluarga besar</p>
+              <div className="mt-6 flex items-end">
+                <span className="text-5xl font-bold text-primary-600">30k</span>
+                <span className="text-secondary-600 ml-2">/kg</span>
+              </div>
+               
+            </div>
+            <div className="p-8">
+              <ul className="space-y-4">
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Penjemputan & pengantaran tak terbatas</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Layanan cuci & lipat</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Proses pada hari yang sama</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Cuci kering premium (10 item)</span>
+                </li>
+                <li className="flex items-center">
+                  <div
+                    className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span>Layanan ekspres termasuk</span>
+                </li>
+              </ul>
+              <a
+                href="#"
+                className="mt-8 block text-center bg-primary-600 text-white px-6 py-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300 transform group-hover:-translate-y-1"
+                >Pilih Paket</a
+              >
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-16 text-center reveal">
+          <p className="text-secondary-600 mb-4">
+            Butuh paket kustom untuk bisnis Anda? Kami menawarkan tarif khusus
+            untuk bisnis.
+          </p>
+          <a
+            href="#"
+            className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium group"
+          >
+            <span>Hubungi kami untuk harga bisnis</span>
+            <i
+              className="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-300"
+            ></i>
+          </a>
         </div>
       </div>
     </section>
 
+  
     <!-- Additional Services Section -->
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">

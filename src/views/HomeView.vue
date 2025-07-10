@@ -495,15 +495,12 @@
     <section id="pricing" className="py-20 bg-secondary-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 reveal">
-          <span
-            className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-4"
-            >Paket Harga</span
-          >
+           
           <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4">
             Harga yang Sederhana dan Transparan
           </h2>
           <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-            Pilih paket yang sesuai dengan kebutuhan laundry Anda.
+            Pilih layanan yang sesuai dengan kebutuhan laundry Anda.
           </p>
         </div>
 
@@ -516,16 +513,14 @@
               <h3
                 className="text-2xl font-bold text-secondary-900 mb-2 group-hover:text-primary-600 transition-colors duration-300"
               >
-                Dasar
+                Cuci dan Lipat
               </h3>
               <p className="text-secondary-600">Cocok untuk individu</p>
               <div className="mt-6 flex items-end">
-                <span className="text-5xl font-bold text-primary-600">300k</span>
-                <span className="text-secondary-600 ml-2">/bulan</span>
+                <span className="text-5xl font-bold text-primary-600">25k</span>
+                <span className="text-secondary-600 ml-2">/kg</span>
               </div>
-              <p className="text-sm text-secondary-500 mt-2">
-                Hingga 20 lbs laundry per bulan
-              </p>
+              
             </div>
             <div className="p-8">
               <ul className="space-y-4">
@@ -589,16 +584,14 @@
             </div>
             <div className="p-8 border-b border-secondary-100">
               <h3 className="text-2xl font-bold text-secondary-900 mb-2">
-                Premium
+                Cuci Kering
               </h3>
               <p className="text-secondary-600">Ideal untuk pasangan & keluarga</p>
               <div className="mt-6 flex items-end">
-                <span className="text-5xl font-bold text-primary-600">500k</span>
-                <span className="text-secondary-600 ml-2">/bulan</span>
+                <span className="text-5xl font-bold text-primary-600">30k</span>
+                <span className="text-secondary-600 ml-2">/kg</span>
               </div>
-              <p className="text-sm text-secondary-500 mt-2">
-                Hingga 40 lbs laundry per bulan
-              </p>
+               
             </div>
             <div className="p-8">
               <ul className="space-y-4">
@@ -659,16 +652,14 @@
               <h3
                 className="text-2xl font-bold text-secondary-900 mb-2 group-hover:text-primary-600 transition-colors duration-300"
               >
-                Ultimate
+                 Setrika & Pres
               </h3>
               <p className="text-secondary-600">Untuk keluarga besar</p>
               <div className="mt-6 flex items-end">
-                <span className="text-5xl font-bold text-primary-600">1000k</span>
-                <span className="text-secondary-600 ml-2">/bulan</span>
+                <span className="text-5xl font-bold text-primary-600">30k</span>
+                <span className="text-secondary-600 ml-2">/kg</span>
               </div>
-              <p className="text-sm text-secondary-500 mt-2">
-                Hingga 80 lbs laundry per bulan
-              </p>
+               
             </div>
             <div className="p-8">
               <ul className="space-y-4">
@@ -739,6 +730,7 @@
         </div>
       </div>
     </section>
+    
 
     <!-- Testimonials Section -->
     <section id="testimonials" className="py-20 bg-white">

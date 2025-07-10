@@ -24,14 +24,12 @@
 <script>
 import { onMounted, computed } from 'vue'
 import { useAuthStore } from './stores/authStore'
-import Header from './components/Header.vue'
-import AuthDebug from './components/AuthDebug.vue'
+import Header from './components/Header.vue' 
 
 export default {
   name: 'App',
   components: {
-    Header,
-    AuthDebug
+    Header
   },
   setup() {
     const authStore = useAuthStore()
