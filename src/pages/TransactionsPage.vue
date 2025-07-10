@@ -8,7 +8,7 @@
 
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-semibold">
-        {{ authService.isAdmin() ? 'Transactions Management' : 'My Transactions' }}
+        {{ authStore.isAdmin ? 'Transactions Management' : 'My Transactions' }}
       </h1>
       <button @click="openCreateForm" class="flex items-center btn-primary" :disabled="!transactionStore || !isComponentMounted">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,6 +69,8 @@
                 <th class="pb-4">ID</th>
                 <th class="pb-4">Customer</th>
                 <th class="pb-4">Branch</th>
+                <th class="pb-4">Service</th>
+                <th class="pb-4">Weight</th>
                 <th class="pb-4">Date</th>
                 <th class="pb-4">Amount</th>
                 <th class="pb-4">Payment Status</th>
@@ -79,10 +81,10 @@
             </thead>
             <tbody>
               <tr v-if="!isComponentMounted || transactionStore?.loading" class="animate-pulse">
-                <td colspan="9" class="py-4 text-center">Loading...</td>
+                <td colspan="11" class="py-4 text-center">Loading...</td>
               </tr>
               <tr v-else-if="paginatedTransactions.length === 0" class="border-t">
-                <td colspan="9" class="py-4 text-center text-gray-500">No transactions found</td>
+                <td colspan="11" class="py-4 text-center text-gray-500">No transactions found</td>
               </tr>
               <tr
                 v-for="transaction in paginatedTransactions"
@@ -101,6 +103,23 @@
                     <div class="font-medium">{{ transaction.branch_store?.name || 'Unknown Branch' }}</div>
                     <div class="text-sm text-gray-500">{{ transaction.branch_store?.address || '' }}</div>
                   </div>
+                </td>
+                <td class="py-4">
+                  <div v-if="transaction.service">
+                    <div class="font-medium">{{ transaction.service.name }}</div>
+                    <div class="text-sm text-gray-500">Rp {{ Number(transaction.service.price).toLocaleString() }}/{{ transaction.service.unit || 'kg' }}</div>
+                    <div class="text-xs text-gray-400">{{ transaction.service.duration }}</div>
+                  </div>
+                  <div v-else class="text-gray-400">-</div>
+                </td>
+                <td class="py-4">
+                  <div v-if="transaction.weight">
+                    <div class="font-medium">{{ transaction.weight }} kg</div>
+                    <div v-if="transaction.service && transaction.service.price" class="text-xs text-gray-500">
+                      {{ transaction.weight }} × Rp {{ Number(transaction.service.price).toLocaleString() }}
+                    </div>
+                  </div>
+                  <div v-else class="text-gray-400">-</div>
                 </td>
                 <td class="py-4">{{ formatDate(transaction.transaction_date) }}</td>
                 <td class="py-4 font-semibold">
@@ -300,7 +319,7 @@ import { useTransactionStore } from '../stores/transactionStore'
 import { useCustomerStore } from '../stores/customerStore'
 import { useBranchStore } from '../stores/branchStore'
 import { useVoucherStore } from '../stores/voucherStore'
-import { authService } from '../services/authService'
+import { useAuthStore } from '../stores/authStore'
 import api from '../services/api'
 import TransactionForm from '../components/TransactionForm.vue'
 
@@ -311,13 +330,14 @@ export default {
   },
   setup() {
     // Initialize stores with error handling
-    let transactionStore, customerStore, branchStore, voucherStore
+    let transactionStore, customerStore, branchStore, voucherStore, authStore
     
     try {
       transactionStore = useTransactionStore()
       customerStore = useCustomerStore()
       branchStore = useBranchStore()
       voucherStore = useVoucherStore()
+      authStore = useAuthStore()
     } catch (error) {
       console.error('Error initializing stores:', error)
       // Return minimal setup to prevent crashes
@@ -620,10 +640,10 @@ export default {
         return
       }
       
-      console.log('Loading data for role:', authService.getUserRole())
+      console.log('Loading data for role:', authStore.role)
       
       try {
-        if (authService.isAdmin()) {
+        if (authStore.isAdmin) {
           // Admin can see all data
           console.log('Loading admin data...')
           await Promise.allSettled([
@@ -633,9 +653,9 @@ export default {
             voucherStore.fetchVouchers()
           ])
           console.log('Admin data loaded')
-        } else if (authService.isUser()) {
+        } else if (authStore.isUser) {
           console.log('Loading user data...')
-          const user = authService.getCurrentUser()
+          const user = authStore.getCurrentUser()
           console.log('Current user:', user)
           
           // User only sees their own transactions and available branches/vouchers
@@ -744,7 +764,7 @@ export default {
     })
 
     return {
-      authService,
+      authStore,
       transactionStore,
       customerStore,
       branchStore,

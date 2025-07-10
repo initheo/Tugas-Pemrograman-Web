@@ -19,6 +19,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('/profile', [ApiController::class, 'updateProfile']);
     Route::put('/change-password', [ApiController::class, 'changePassword']);
 
+    // Endpoint Untuk Branch Store
+    Route::resource('branchstores', App\Http\Controllers\API\BranchStoreController::class);
+
+    // Endpoint Untuk Voucher
+    Route::resource('vouchers', App\Http\Controllers\API\VoucherController::class);
+
     // Admin only routes
     Route::group(['middleware' => ['role:admin']], function () {
         // Endpoint Untuk Customer
@@ -26,11 +32,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         // Additional customer route to get customer by user_id
         Route::get('customers/by-user/{userId}', [App\Http\Controllers\API\CustomerController::class, 'getByUserId']);
 
-        // Endpoint Untuk Branch Store
-        Route::resource('branchstores', App\Http\Controllers\API\BranchStoreController::class);
-
-        // Endpoint Untuk Voucher
-        Route::resource('vouchers', App\Http\Controllers\API\VoucherController::class);
 
         // Admin dashboard
         Route::get('/admin/dashboard', function () {
@@ -75,7 +76,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/user/transactions', [App\Http\Controllers\API\UserDashboardController::class, 'getUserTransactions']);
         Route::get('/user/vouchers', [App\Http\Controllers\API\UserDashboardController::class, 'getAvailableVouchers']);
         Route::get('/user/branches', [App\Http\Controllers\API\UserDashboardController::class, 'getAvailableBranches']);
-        
+
         // User can get their own customer profile
         Route::get('/user/profile', [App\Http\Controllers\API\UserDashboardController::class, 'getUserProfile']);
     });
@@ -121,10 +122,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             'best_customers' => $bestCustomers,
             'best_branches' => $bestBranches,
         ]);
-        
     })->name('dashboard.index');
-
-    
 });
 
 // Payment callback (tidak perlu auth)

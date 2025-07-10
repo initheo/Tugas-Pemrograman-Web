@@ -15,9 +15,33 @@
         </button>
       </div>
 
+      <!-- General Error Message -->
+      <div v-if="errors.general" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p class="text-red-700">{{ errors.general }}</p>
+      </div>
+
+      <!-- Role-specific Information -->
+      <div v-if="authStore.isAdmin" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div class="flex items-center text-blue-700">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-medium">Admin Mode: You can create transactions for any customer</span>
+        </div>
+      </div>
+      
+      <div v-else-if="authStore.isUser" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+        <div class="flex items-center text-green-700">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span class="text-sm font-medium">User Mode: Transaction will be created for your profile</span>
+        </div>
+      </div>
+
       <form @submit.prevent="submitForm" class="space-y-6">
-        <!-- Customer Selection -->
-        <div v-if="authService.isAdmin()">
+        <!-- Customer Selection for Admin -->
+        <div v-if="authStore.isAdmin">
           <label for="customer" class="form-label">Customer *</label>
           <select 
             id="customer" 
@@ -36,10 +60,16 @@
             </option>
           </select>
           <p v-if="errors.customer_id" class="mt-1 text-sm text-red-500">{{ errors.customer_id }}</p>
+          <p class="mt-1 text-sm text-blue-600">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            As admin, you can create transactions for any customer
+          </p>
         </div>
 
-        <!-- Customer Info for User Role -->
-        <div v-else-if="authService.isUser()">
+        <!-- Customer Info for User Role (Read-only) -->
+        <div v-else-if="authStore.isUser">
           <label class="form-label">Customer</label>
           <div class="input-field bg-gray-100">
             <div v-if="currentCustomer && !currentCustomer._placeholder">
@@ -50,11 +80,20 @@
             <div v-else-if="currentCustomer && currentCustomer._placeholder" class="text-amber-600">
               <div class="font-medium">{{ currentCustomer.name }}</div>
               <div class="text-sm text-gray-600">{{ currentCustomer.email }}</div>
-              <div class="text-xs text-amber-600 mt-1">⚠ No customer profile found. Contact administrator.</div>
+              <div class="text-xs text-amber-600 mt-1">⚠ No customer profile found. Contact administrator to create your customer profile.</div>
             </div>
             <div v-else class="text-gray-500">Loading customer data...</div>
           </div>
-          <p v-if="errors.customer_id" class="mt-1 text-sm text-red-500">{{ errors.customer_id }}</p>
+          <!-- Only show error if user has no customer profile -->
+          <p v-if="currentCustomer && currentCustomer._placeholder" class="mt-1 text-sm text-amber-600">
+            You need a customer profile to create transactions. Please contact administrator.
+          </p>
+          <p v-else-if="currentCustomer && !currentCustomer._placeholder" class="mt-1 text-sm text-blue-600">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Transaction will be created for your customer profile
+          </p>
         </div>
 
         <!-- Branch Selection -->
@@ -161,21 +200,62 @@
           </div>
         </div>
 
-        <!-- Base Amount -->
+        <!-- Service Selection -->
         <div>
-          <label for="base_amount" class="form-label">Base Amount *</label>
+          <label for="service" class="form-label">Service *</label>
+          <select 
+            id="service" 
+            v-model="form.service_id" 
+            required 
+            class="input-field"
+            :class="{ 'border-red-500': errors.service_id }"
+            @change="calculateBaseAmount"
+          >
+            <option value="">Select Service</option>
+            <option 
+              v-for="service in activeServices" 
+              :key="service.id" 
+              :value="service.id"
+            >
+              {{ service.name }} - Rp {{ Number(service.price).toLocaleString() }} ({{ service.duration }})
+            </option>
+          </select>
+          <p v-if="errors.service_id" class="mt-1 text-sm text-red-500">{{ errors.service_id }}</p>
+        </div>
+
+        <!-- Weight/Quantity -->
+        <div>
+          <label for="weight" class="form-label">Weight/Quantity *</label>
+          <input 
+            id="weight" 
+            v-model.number="form.weight" 
+            type="number" 
+            min="0.1" 
+            step="0.1"
+            required 
+            class="input-field"
+            :class="{ 'border-red-500': errors.weight }"
+            @input="calculateBaseAmount"
+            placeholder="Enter weight in kg or quantity"
+          />
+          <p v-if="errors.weight" class="mt-1 text-sm text-red-500">{{ errors.weight }}</p>
+          <p v-if="selectedService" class="mt-1 text-sm text-gray-600">
+            {{ form.weight }} × Rp {{ Number(selectedService.price).toLocaleString() }} = Rp {{ Number(form.base_amount).toLocaleString() }}
+          </p>
+        </div>
+
+        <!-- Base Amount (Read-only, calculated) -->
+        <div>
+          <label for="base_amount" class="form-label">Base Amount</label>
           <input 
             id="base_amount" 
             v-model.number="form.base_amount" 
             type="number" 
-            min="0" 
-            step="1000"
-            required 
-            class="input-field"
-            :class="{ 'border-red-500': errors.base_amount }"
-            @input="calculateTotal"
+            readonly
+            class="input-field bg-gray-100"
+            placeholder="Will be calculated automatically"
           />
-          <p v-if="errors.base_amount" class="mt-1 text-sm text-red-500">{{ errors.base_amount }}</p>
+          <p class="mt-1 text-sm text-gray-600">Calculated from: Weight × Service Price</p>
         </div>
 
         <!-- Discount Amount (Calculated) -->
@@ -273,7 +353,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useCustomerStore } from '../stores/customerStore'
 import { useBranchStore } from '../stores/branchStore'
 import { useVoucherStore } from '../stores/voucherStore'
-import { authService } from '../services/authService'
+import { useServiceStore } from '../stores/serviceStore'
+import { useAuthStore } from '../stores/authStore'
 import api from '../services/api'
 
 export default {
@@ -289,11 +370,15 @@ export default {
     const customerStore = useCustomerStore()
     const branchStore = useBranchStore()
     const voucherStore = useVoucherStore()
+    const serviceStore = useServiceStore()
+    const authStore = useAuthStore()
 
     // Form state
     const form = ref({
       customer_id: '',
       branch_store_id: '',
+      service_id: '',
+      weight: 0,
       transaction_date: new Date().toISOString().split('T')[0],
       base_amount: 0,
       total_amount: 0,
@@ -367,9 +452,19 @@ export default {
       return filtered
     })
 
+    // Services computed properties
+    const activeServices = computed(() => {
+      return serviceStore.services.filter(service => service.is_active) || []
+    })
+
+    const selectedService = computed(() => {
+      if (!form.value.service_id) return null
+      return serviceStore.services.find(service => service.id == form.value.service_id) || null
+    })
+
     // Methods
     const loadCurrentCustomer = async () => {
-      if (authService.isUser()) {
+      if (authStore.isUser) {
         try {
           console.log('Loading current customer for user...')
           const response = await api.get('/user/profile')
@@ -378,12 +473,12 @@ export default {
           // Check if user has a customer profile
           if (response.data && response.data.data && response.data.data.customer) {
             currentCustomer.value = response.data.data.customer
-            form.value.customer_id = response.data.data.customer.id
+            // Don't set form.value.customer_id - backend will handle this automatically
             console.log('Current customer loaded from profile:', currentCustomer.value)
           } else {
             // User doesn't have a customer profile yet
             console.log('User has no customer profile. Creating placeholder.')
-            const userData = response.data.data.user || response.data.user || authService.getCurrentUser()
+            const userData = response.data.data.user || response.data.user || authStore.getCurrentUser()
             
             if (userData) {
               // Show user data but indicate no customer profile
@@ -393,7 +488,7 @@ export default {
                 email: userData.email,
                 _placeholder: true // Flag to indicate this is not a real customer record
               }
-              form.value.customer_id = null
+              // Don't set form.value.customer_id for placeholder
             }
           }
         } catch (error) {
@@ -401,6 +496,15 @@ export default {
           alert('Error loading user profile. Please contact administrator to create your customer profile.')
         }
       }
+    }
+
+    const calculateBaseAmount = () => {
+      if (selectedService.value && form.value.weight > 0) {
+        form.value.base_amount = selectedService.value.price * form.value.weight
+      } else {
+        form.value.base_amount = 0
+      }
+      calculateTotal()
     }
 
     const applyVoucher = () => {
@@ -457,17 +561,27 @@ export default {
     const validateForm = () => {
       errors.value = {}
 
+      console.log('Validating form - Auth state:', {
+        isAdmin: authStore.isAdmin,
+        isUser: authStore.isUser,
+        userRole: authStore.user?.role
+      })
+
       // For admin, customer_id is required from dropdown
-      // For user, customer_id should be set automatically, but check if customer profile exists
-      if (authService.isAdmin() && !form.value.customer_id) {
+      if (authStore.isAdmin && !form.value.customer_id) {
+        console.log('Admin validation: customer_id required but not provided')
         errors.value.customer_id = 'Customer is required'
-      } else if (authService.isUser()) {
+      }
+      
+      // For user, check if they have a valid customer profile
+      if (authStore.isUser) {
+        console.log('User validation - current customer:', currentCustomer.value)
         if (!currentCustomer.value) {
-          errors.value.customer_id = 'Customer profile not loaded. Please try again.'
+          errors.value.general = 'Customer profile not loaded. Please refresh and try again.'
+          return false
         } else if (currentCustomer.value._placeholder) {
-          errors.value.customer_id = 'You need a customer profile to create transactions. Please contact administrator.'
-        } else if (!form.value.customer_id) {
-          errors.value.customer_id = 'Customer data not loaded properly. Please refresh and try again.'
+          errors.value.general = 'You need a customer profile to create transactions. Please contact administrator.'
+          return false
         }
       }
       
@@ -477,19 +591,34 @@ export default {
       if (!form.value.transaction_date) {
         errors.value.transaction_date = 'Transaction date is required'
       }
+      if (!form.value.service_id) {
+        errors.value.service_id = 'Service is required'
+      }
+      if (!form.value.weight || form.value.weight <= 0) {
+        errors.value.weight = 'Weight/Quantity must be greater than 0'
+      }
       if (!form.value.base_amount || form.value.base_amount <= 0) {
         errors.value.base_amount = 'Base amount must be greater than 0'
       }
-
       if (!form.value.payment_method) {
         errors.value.payment_method = 'Payment method is required'
       }
 
+      console.log('Validation errors:', errors.value)
       return Object.keys(errors.value).length === 0
     }
 
     const submitForm = () => {
+      console.log('Submitting form - Role check:', {
+        isAdmin: authStore.isAdmin,
+        isUser: authStore.isUser,
+        userRole: authStore.user?.role,
+        formCustomerId: form.value.customer_id,
+        currentCustomer: currentCustomer.value
+      })
+
       if (!validateForm()) {
+        console.log('Form validation failed')
         return
       }
 
@@ -499,7 +628,15 @@ export default {
         discount_amount: discountAmount.value
       }
 
-      console.log('Submitting transaction data:', transactionData)
+      // For user role, don't send customer_id (backend will get it from user's customer relationship)
+      if (authStore.isUser) {
+        console.log('User role - removing customer_id from transaction data')
+        delete transactionData.customer_id
+      } else if (authStore.isAdmin) {
+        console.log('Admin role - keeping customer_id in transaction data:', transactionData.customer_id)
+      }
+
+      console.log('Final transaction data to submit:', transactionData)
       emit('submit', transactionData)
     }
 
@@ -507,9 +644,12 @@ export default {
       form.value = {
         customer_id: '',
         branch_store_id: '',
+        service_id: '',
+        weight: 0,
         transaction_date: new Date().toISOString().split('T')[0],
         base_amount: 0,
         total_amount: 0,
+        payment_method: '',
         notes: ''
       }
       selectedVoucherId.value = ''
@@ -522,16 +662,36 @@ export default {
     onMounted(async () => {
       try {
         console.log('Loading form data...')
+        console.log('Auth store state:', {
+          user: authStore.user,
+          isAdmin: authStore.isAdmin,
+          isUser: authStore.isUser
+        })
         
         // Load customer data for user role
-        if (authService.isUser()) {
+        if (authStore.isUser) {
+          console.log('Loading customer for user role...')
           await loadCurrentCustomer()
+        } else if (authStore.isAdmin) {
+          console.log('Admin role - will load customer list...')
+        } else {
+          console.warn('Unknown role or not authenticated:', authStore.user?.role)
         }
         
         const results = await Promise.allSettled([
-          authService.isAdmin() ? customerStore.fetchCustomers() : Promise.resolve(),
+          // Load customers for admin only
+          authStore.isAdmin ? (async () => {
+            console.log('Loading customers for admin...')
+            try {
+              await customerStore.fetchCustomers()
+              console.log('Customers loaded:', customerStore.customers?.length || 0)
+            } catch (error) {
+              console.error('Error loading customers:', error)
+            }
+          })() : Promise.resolve(),
+          
           // Load branches based on user role
-          authService.isUser() ? 
+          authStore.isUser ? 
             // For users, load branches from user endpoint
             (async () => {
               try {
@@ -550,8 +710,18 @@ export default {
                 }
               }
             })() :
-            branchStore.fetchBranches(),
-          authService.isUser() ? 
+            // For admin, load all branches
+            (async () => {
+              console.log('Loading all branches for admin...')
+              try {
+                await branchStore.fetchBranches()
+                console.log('Admin branches loaded:', branchStore.branches?.length || 0)
+              } catch (error) {
+                console.error('Error loading admin branches:', error)
+              }
+            })(),
+            
+          authStore.isUser ? 
             // For users, load vouchers from user endpoint
             (async () => {
               try {
@@ -564,11 +734,31 @@ export default {
                 voucherStore.vouchers = []
               }
             })() :
-            voucherStore.fetchVouchers()
+            // For admin, load all vouchers
+            (async () => {
+              console.log('Loading all vouchers for admin...')
+              try {
+                await voucherStore.fetchVouchers()
+                console.log('Admin vouchers loaded:', voucherStore.vouchers?.length || 0)
+              } catch (error) {
+                console.error('Error loading admin vouchers:', error)
+              }
+            })(),
+            
+          // Load services for all users
+          (async () => {
+            console.log('Loading services...')
+            try {
+              await serviceStore.fetchServices()
+              console.log('Services loaded:', serviceStore.services?.length || 0)
+            } catch (error) {
+              console.error('Error loading services:', error)
+            }
+          })()
         ])
         
         results.forEach((result, index) => {
-          const names = ['customers', 'branches', 'vouchers']
+          const names = ['customers', 'branches', 'vouchers', 'services']
           if (result.status === 'rejected') {
             console.error(`Failed to load ${names[index]}:`, result.reason)
           } else {
@@ -576,19 +766,25 @@ export default {
           }
         })
         
-        console.log('Final vouchers in store:', voucherStore.vouchers?.length || 0)
-        console.log('Current customer:', currentCustomer.value)
+        console.log('Final data loaded:')
+        console.log('- Customers (admin only):', authStore.isAdmin ? (customerStore.customers?.length || 0) : 'N/A')
+        console.log('- Branches:', branchStore.branches?.length || 0)
+        console.log('- Vouchers:', voucherStore.vouchers?.length || 0)
+        console.log('- Services:', serviceStore.services?.length || 0)
+        console.log('- Current customer (user only):', currentCustomer.value)
       } catch (error) {
         console.warn('Some data failed to load:', error)
       }
     })
 
-    // Watch for base amount changes
+    // Watch for changes that affect base amount calculation
+    watch(() => form.value.service_id, calculateBaseAmount)
+    watch(() => form.value.weight, calculateBaseAmount)
     watch(() => form.value.base_amount, calculateTotal)
     watch(selectedVoucher, calculateTotal)
 
     return {
-      authService,
+      authStore,
       form,
       selectedVoucherId,
       selectedVoucher,
@@ -598,9 +794,12 @@ export default {
       branches,
       vouchers,
       availableVouchers,
+      activeServices,
+      selectedService,
       currentCustomer,
       voucherStore, // Add store access for template
       loadCurrentCustomer,
+      calculateBaseAmount,
       applyVoucher,
       calculateTotal,
       submitForm,

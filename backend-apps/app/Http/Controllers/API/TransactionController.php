@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Services\PaymentGatewayService;
 
@@ -24,11 +25,11 @@ class TransactionController extends Controller
         
         if ($user->isAdmin()) {
             // Admin can see all transactions
-            $transactions = Transaction::with(['customer', 'branchStore', 'voucher', 'user'])->get();
+            $transactions = Transaction::with(['customer', 'branchStore', 'voucher', 'user', 'service'])->get();
         } else {
             // User can only see their own transactions
             $transactions = Transaction::where('user_id', $user->id)
-                                     ->with(['customer', 'branchStore', 'voucher', 'user'])
+                                     ->with(['customer', 'branchStore', 'voucher', 'user', 'service'])
                                      ->get();
         }
 
@@ -41,7 +42,7 @@ class TransactionController extends Controller
     // make a function show
     public function show($id)
     {
-        $transaction = Transaction::with(['customer', 'branchStore', 'voucher'])->find($id);
+        $transaction = Transaction::with(['customer', 'branchStore', 'voucher', 'service'])->find($id);
         if (!$transaction) {
             return response()->json([
                 'message' => 'Transaction not found'
@@ -56,20 +57,48 @@ class TransactionController extends Controller
     // make a function store
     public function store(Request $request)
     {
-
         try {
-
-            $request->validate([
-                'customer_id' => 'required|exists:customers,id',
+            $user = $request->user();
+            
+            // Different validation rules based on user role
+            $validationRules = [
                 'branch_store_id' => 'required|exists:branch_stores,id',
                 'voucher_id' => 'nullable|exists:vouchers,id',
+                'service_id' => 'nullable|exists:services,id',
+                'weight' => 'nullable|numeric|min:0',   
                 'transaction_date' => 'required|date',
                 'base_amount' => 'required|numeric|min:0',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'total_amount' => 'required|numeric|min:0',
                 'payment_method' => 'required|in:CASH,TRANSFER',
                 'notes' => 'nullable|string|max:255'
-            ]);
+            ];
+
+            // For admin, customer_id is required from request
+            // For user, we'll get customer_id from user's customer relationship
+            if ($user->isAdmin()) {
+                $validationRules['customer_id'] = 'required|exists:customers,id';
+            }
+
+            $request->validate($validationRules);
+
+            // Handle customer_id based on user role
+            if ($user->isUser()) {
+                // For regular users, get customer_id from user's customer relationship
+                $customer = $user->customer; // Assuming User model has customer relationship
+                
+                if (!$customer) {
+                    return response()->json([
+                        'message' => 'Customer profile not found. Please contact administrator to create your customer profile.',
+                        'error' => 'No customer profile linked to your account'
+                    ], 400);
+                }
+                
+                $customerId = $customer->id;
+            } else {
+                // For admin, use provided customer_id
+                $customerId = $request->customer_id;
+            }
 
             // Calculate discount if voucher is provided
             $discountAmount = 0;
@@ -93,14 +122,25 @@ class TransactionController extends Controller
             $finalTotalAmount = $request->base_amount - $finalDiscountAmount;
 
             $transactionData = $request->all();
+            $transactionData['customer_id'] = $customerId; // Set customer_id based on user role
             $transactionData['discount_amount'] = $finalDiscountAmount;
             $transactionData['total_amount'] = $finalTotalAmount;
             $transactionData['status_payment'] = 'unpaid';
             $transactionData['status_laundry'] = 'pending';
-            $transactionData['user_id'] = $request->user()->id; // Add user_id
+
+            // add weight and service_id if provided
+            if ($request->has('weight')) {
+                $transactionData['weight'] = $request->weight;
+            }
+
+            if ($request->has('service_id')) {
+                $transactionData['service_id'] = $request->service_id;
+            }
+
+            $transactionData['user_id'] = $user->id; // Add user_id
 
             // Generate payment reference ID
-            $referenceId = 'TXN-' . time() . '-' . $transactionData['customer_id'];
+            $referenceId = 'TXN-' . time() . '-' . $customerId;
             $transactionData['payment_reference_id'] = $referenceId;
 
             $transaction = Transaction::create($transactionData);
@@ -138,12 +178,17 @@ class TransactionController extends Controller
                 ]);
             }
 
+           
+
             return response()->json([
                 'message' => 'Transaction created successfully',
-                'data' => $transaction->load(['customer', 'branchStore', 'voucher'])
+                'data' => $transaction->load(['customer', 'branchStore', 'voucher', 'service'])
             ], 201);
 
         } catch (\Throwable $th) {
+
+
+             Log::info($th->getMessage());
 
             return response()->json([
                 'message' => 'Failed to create transaction',

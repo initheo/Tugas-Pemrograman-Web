@@ -14,6 +14,8 @@ class Transaction extends Model
         'branch_store_id',
         'voucher_id',
         'user_id',
+        'service_id',
+        'weight',
         'transaction_date',
         'base_amount',
         'discount_amount',
@@ -45,5 +47,10 @@ class Transaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
     }
 }
