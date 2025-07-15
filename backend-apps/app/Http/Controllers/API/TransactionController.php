@@ -8,6 +8,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Services\PaymentGatewayService;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\LaundryCompletedMail;
 
 class TransactionController extends Controller
 {
@@ -342,12 +344,34 @@ class TransactionController extends Controller
                 ], 422);
             }
 
-            $transaction->update(['status_laundry' => $newStatus]);
+            // if status completed, send email notification to customer
+            if ($newStatus === 'completed') {
+                try {
+                    // Load transaction with all relations needed for email
+                    $transaction->load(['customer', 'branchStore', 'service']);
+                    
+                    // Check if customer has email
+                    if ($transaction->customer && $transaction->customer->email) {
+                        
+                        Mail::to($transaction->customer->email)
+                            ->send(new LaundryCompletedMail($transaction));
+                        
+                         
+                    } else {
+                        
+                    }
+                } catch (\Exception $e) {
+                     
+                }
+            }
 
+            $transaction->update(['status_laundry' => $newStatus]);
+ 
             return response()->json([
                 'message' => 'Laundry status updated successfully',
                 'data' => $transaction->load(['customer', 'branchStore', 'voucher'])
             ]);
+
 
         } catch (\Exception $e) {
             return response()->json([
