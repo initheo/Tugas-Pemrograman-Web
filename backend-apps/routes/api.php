@@ -28,7 +28,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Admin only routes
     Route::group(['middleware' => ['role:admin']], function () {
-
+        // Existing admin routes...
+        
+        // Broadcast message routes 
+        Route::post('/broadcast/send-now', [App\Http\Controllers\API\BroadcastController::class, 'sendMessageNow']);
 
         // Download Excel fro transaction data
         Route::post('transactions/download-excel', [ExcelController::class, 'downloadExcel'])

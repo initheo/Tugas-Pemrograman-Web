@@ -9,6 +9,7 @@ import TransactionsPage from '../pages/TransactionsPage.vue';
 import ServicesPage from '../pages/ServicesPage.vue';
 import ProfilePage from '../pages/ProfilePage.vue';
 import SettingsPage from '../pages/SettingsPage.vue';
+import BroadcastPage from '../pages/BroadcastPage.vue';
 import LoginPage from '../pages/LoginPage.vue';
 import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
@@ -116,6 +117,12 @@ const router = createRouter({
       name: 'Transactions',
       component: TransactionsPage,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/broadcast',
+      name: 'Broadcast',
+      component: BroadcastPage,
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/profile',
