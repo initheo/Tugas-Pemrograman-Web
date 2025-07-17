@@ -5,6 +5,7 @@ use App\Models\BranchStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ApiController;
+use App\Http\Controllers\API\ExcelController;
 use App\Http\Controllers\API\PegawaiController;
 
 
@@ -27,6 +28,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Admin only routes
     Route::group(['middleware' => ['role:admin']], function () {
+
+
+        // Download Excel fro transaction data
+        Route::post('transactions/download-excel', [ExcelController::class, 'downloadExcel'])
+            ->name('transactions.download-excel');
+
         // Endpoint Untuk Customer
         Route::resource('customers', App\Http\Controllers\API\CustomerController::class);
         // Additional customer route to get customer by user_id

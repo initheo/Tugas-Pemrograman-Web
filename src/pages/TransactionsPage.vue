@@ -35,12 +35,20 @@
             <h1 class="text-2xl font-semibold">
               {{ authStore.isAdmin ? 'Transactions Management' : 'My Transactions' }}
             </h1>
-            <button @click="openCreateForm" class="flex items-center btn-primary" :disabled="!transactionStore || !isComponentMounted">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              New Transaction
-            </button>
+            <div class="flex items-center space-x-3">
+              <button @click="openExcelDownloadForm" class="flex items-center btn-secondary" :disabled="!transactionStore || !isComponentMounted">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M7 7h.01M17 7h.01M7 17h.01M17 17h.01M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                </svg>
+                Download Excel
+              </button>
+              <button @click="openCreateForm" class="flex items-center btn-primary" :disabled="!transactionStore || !isComponentMounted">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                New Transaction
+              </button>
+            </div>
           </div>
 
           <!-- Error Message -->
@@ -352,6 +360,62 @@
               </div>
             </div>
           </div>
+
+          <!-- Excel Download Modal -->
+          <div v-if="showExcelDownloadForm" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div class="w-full max-w-md p-6 bg-white rounded-lg">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Download Excel Report</h3>
+                <button @click="showExcelDownloadForm = false" class="text-gray-500 hover:text-gray-700">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <form @submit.prevent="downloadExcelReport" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <input
+                    v-model="excelDownloadForm.startDate"
+                    type="date"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <input
+                    v-model="excelDownloadForm.endDate"
+                    type="date"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    @click="showExcelDownloadForm = false"
+                    class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    :disabled="isDownloadingExcel"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
+                  >
+                    <svg v-if="isDownloadingExcel" class="animate-spin w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M7 7h.01M17 7h.01M7 17h.01M17 17h.01M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                    </svg>
+                    {{ isDownloadingExcel ? 'Downloading...' : 'Download Excel' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </main>
     </div>
@@ -401,6 +465,12 @@ export default {
     const itemsPerPage = ref(10)
     const currentPage = ref(1)
     const isComponentMounted = ref(false)
+    const showExcelDownloadForm = ref(false)
+    const isDownloadingExcel = ref(false)
+    const excelDownloadForm = ref({
+      startDate: '',
+      endDate: ''
+    })
 
     // Computed properties with safety checks
     const filteredTransactions = computed(() => {
@@ -449,6 +519,132 @@ export default {
 
     const closeForm = () => {
       showForm.value = false
+    }
+
+    const openExcelDownloadForm = () => {
+      // Set default date range (last 30 days)
+      const today = new Date()
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+      
+      excelDownloadForm.value.endDate = today.toISOString().split('T')[0]
+      excelDownloadForm.value.startDate = thirtyDaysAgo.toISOString().split('T')[0]
+      
+      showExcelDownloadForm.value = true
+    }
+
+    const downloadExcelReport = async () => {
+      if (!transactionStore || !isComponentMounted.value) {
+        alert('Component not ready. Please try again.')
+        return
+      }
+
+      if (!excelDownloadForm.value.startDate || !excelDownloadForm.value.endDate) {
+        alert('Please select both start and end dates.')
+        return
+      }
+
+      if (new Date(excelDownloadForm.value.startDate) > new Date(excelDownloadForm.value.endDate)) {
+        alert('Start date cannot be after end date.')
+        return
+      }
+
+      isDownloadingExcel.value = true
+
+      try {
+        console.log('Downloading Excel report...', excelDownloadForm.value)
+        
+        // Get auth token
+        const token = localStorage.getItem('auth_token')
+        
+        if (!token) {
+          alert('You must be logged in to download the report.')
+          return
+        }
+
+        // Create URL with query parameters
+        const baseURL = 'http://127.0.0.1:8000/api'
+        const params = new URLSearchParams({
+          start_date: excelDownloadForm.value.startDate,
+          end_date: excelDownloadForm.value.endDate
+        })
+        
+        const downloadUrl = `${baseURL}/transactions/download-excel?${params.toString()}`
+        
+        console.log('Download URL:', downloadUrl)
+
+        // Try both POST and GET methods
+        let response
+        try {
+          // First try POST method
+          response = await fetch(`${baseURL}/transactions/download-excel`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            },
+            body: JSON.stringify({
+              start_date: excelDownloadForm.value.startDate,
+              end_date: excelDownloadForm.value.endDate
+            })
+          })
+        } catch (postError) {
+          console.log('POST method failed, trying GET method:', postError)
+          // If POST fails, try GET method
+          response = await fetch(downloadUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+          })
+        }
+
+        if (!response.ok) {
+          // If both methods fail, provide more detailed error
+          const errorText = await response.text()
+          console.error('Server error response:', errorText)
+          throw new Error(`Server responded with status: ${response.status}. ${response.statusText}`)
+        }
+
+        // Get the blob from response
+        const blob = await response.blob()
+        
+        // Verify it's actually an Excel file
+        if (blob.type && !blob.type.includes('sheet') && !blob.type.includes('excel')) {
+          console.warn('Response might not be an Excel file. Content-Type:', blob.type)
+        }
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob)
+        const downloadLink = document.createElement('a')
+        downloadLink.href = url
+        
+        // Generate filename with date range
+        const filename = `transactions_report_${excelDownloadForm.value.startDate}_to_${excelDownloadForm.value.endDate}.xlsx`
+        downloadLink.download = filename
+        downloadLink.style.display = 'none'
+        
+        // Trigger download
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+        document.body.removeChild(downloadLink)
+        
+        // Clean up
+        window.URL.revokeObjectURL(url)
+        
+        console.log('Excel report downloaded successfully')
+        alert('Excel report downloaded successfully!')
+        
+        // Close the form
+        showExcelDownloadForm.value = false
+        
+      } catch (error) {
+        console.error('Error downloading Excel report:', error)
+        alert('Error downloading Excel report: ' + error.message)
+      } finally {
+        isDownloadingExcel.value = false
+      }
     }
 
     const openPaymentLink = (url) => {
@@ -841,10 +1037,15 @@ export default {
       filteredTransactions,
       paginatedTransactions,
       isComponentMounted,
+      showExcelDownloadForm,
+      isDownloadingExcel,
+      excelDownloadForm,
       formatDate,
       openCreateForm,
       openPaymentLink,
       closeForm,
+      openExcelDownloadForm,
+      downloadExcelReport,
       handleSubmit,
       checkPaymentStatus,
       refreshTransaction,
@@ -883,6 +1084,30 @@ export default {
 }
 
 .btn-primary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background-color: #059669;
+  color: white;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #047857;
+}
+
+.btn-secondary:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.btn-secondary:disabled {
   background-color: #9ca3af;
   cursor: not-allowed;
 }
