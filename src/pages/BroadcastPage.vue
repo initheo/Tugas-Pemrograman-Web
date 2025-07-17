@@ -162,8 +162,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Message Sent Successfully!</h3>
-          <p class="text-gray-600 mb-6">Your broadcast message has been sent to all users.</p>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Message Queued Successfully!</h3>
+          <p class="text-gray-600 mb-6">Your broadcast message has been added to the queue and will be sent to all users shortly.</p>
           <button
             @click="showSuccessModal = false"
             class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -244,21 +244,53 @@ export default {
       isLoading.value = true
 
       try {
+        console.log('Sending broadcast message:', messageContent.value.substring(0, 50) + '...')
+        
+        // Test connection first
+        try {
+          await api.get('/broadcast/test')
+          console.log('API connection test successful')
+        } catch (testError) {
+          console.warn('API test failed, proceeding anyway:', testError.message)
+        }
+
         const response = await api.post('/broadcast/send-now', {
           message: messageContent.value
         })
+
+        console.log('Broadcast response:', response.data)
 
         if (response.data.success) {
           showSuccessModal.value = true
           clearMessage()
           loadRecentBroadcasts() // Reload recent broadcasts
+          
+          // Show additional info about queuing
+          console.log('Message queued successfully:', response.data.data)
         } else {
           throw new Error(response.data.message || 'Failed to send broadcast')
         }
 
       } catch (error) {
         console.error('Error sending broadcast:', error)
-        alert('Error sending broadcast message: ' + (error.response?.data?.message || error.message))
+        
+        let errorMessage = 'Error sending broadcast message: '
+        
+        if (error.code === 'ECONNABORTED') {
+          errorMessage += 'Request timeout. The server might be busy. Please try again.'
+        } else if (error.response?.status === 401) {
+          errorMessage += 'Authentication failed. Please login again.'
+        } else if (error.response?.status === 403) {
+          errorMessage += 'Access denied. Admin permission required.'
+        } else if (error.response?.data?.message) {
+          errorMessage += error.response.data.message
+        } else if (error.message) {
+          errorMessage += error.message
+        } else {
+          errorMessage += 'Unknown error occurred.'
+        }
+        
+        alert(errorMessage)
       } finally {
         isLoading.value = false
       }

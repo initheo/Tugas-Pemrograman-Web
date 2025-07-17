@@ -31,7 +31,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         // Existing admin routes...
         
         // Broadcast message routes 
+        Route::get('/broadcast/test', [App\Http\Controllers\API\BroadcastController::class, 'test']);
+        Route::post('/broadcast/send', [App\Http\Controllers\API\BroadcastController::class, 'sendMessage']);
         Route::post('/broadcast/send-now', [App\Http\Controllers\API\BroadcastController::class, 'sendMessageNow']);
+        Route::get('/broadcast/queue-status', [App\Http\Controllers\API\BroadcastController::class, 'getQueueStatus']);
 
         // Download Excel fro transaction data
         Route::post('transactions/download-excel', [ExcelController::class, 'downloadExcel'])
