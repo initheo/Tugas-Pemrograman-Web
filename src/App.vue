@@ -5,7 +5,12 @@
       <router-view />
     </div>
     
-    <!-- Show main layout with unified header -->
+    <!-- Show pages with sidebar (no header) -->
+    <div v-else-if="isPageRoute" class="min-h-screen bg-gray-50">
+      <router-view />
+    </div>
+    
+    <!-- Show main layout with unified header for views -->
     <div v-else class="min-h-screen bg-gray-50">
       <!-- Use unified Header component -->
       <Header />
@@ -24,6 +29,7 @@
 <script>
 import { onMounted, computed } from 'vue'
 import { useAuthStore } from './stores/authStore'
+import { useRoute } from 'vue-router'
 import Header from './components/Header.vue' 
 
 export default {
@@ -33,9 +39,25 @@ export default {
   },
   setup() {
     const authStore = useAuthStore()
+    const route = useRoute()
 
     const isDevelopment = computed(() => {
       return import.meta.env.DEV
+    })
+
+    // Check if current route is a page route (should use sidebar instead of header)
+    const isPageRoute = computed(() => {
+      const pageRoutes = [
+        'Dashboard',
+        'Customers', 
+        'Branches',
+        'Vouchers',
+        'Transactions',
+        'ServicesManagement',
+        'Profile',
+        'Settings'
+      ]
+      return pageRoutes.includes(route.name)
     })
 
     onMounted(() => {
@@ -45,7 +67,8 @@ export default {
 
     return {
       authStore,
-      isDevelopment
+      isDevelopment,
+      isPageRoute
     }
   }
 }

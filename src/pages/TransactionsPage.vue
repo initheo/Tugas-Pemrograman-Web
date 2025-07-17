@@ -1,334 +1,363 @@
 <template>
-  <div class="p-6">
-  
-    <!-- Error state for store initialization -->
-    <div v-if="!transactionStore || !isComponentMounted" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-      <p class="text-yellow-700">Loading component... Please wait.</p>
-    </div>
-
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold">
-        {{ authStore.isAdmin ? 'Transactions Management' : 'My Transactions' }}
-      </h1>
-      <button @click="openCreateForm" class="flex items-center btn-primary" :disabled="!transactionStore || !isComponentMounted">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        New Transaction
-      </button>
-    </div>
-
-    <!-- Error Message -->
-    <div v-if="transactionStore?.error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-      <p class="text-red-700">{{ transactionStore.error }}</p>
-      <button @click="transactionStore.clearError()" class="mt-2 text-sm text-red-600 hover:text-red-800">
-        Dismiss
-      </button>
-    </div>
-
-    <!-- Role Information -->
-    <div v-if="authStore.isUser" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-      <div class="flex items-center text-blue-700">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span class="text-sm">You can view your transactions and payment status. Laundry status updates are managed by admin.</span>
-      </div>
-    </div>
-
-    <!-- Transaction list table -->
-    <div class="bg-white rounded-lg shadow">
-      <div class="p-6">
-        <!-- Search and Items per page -->
-        <div class="flex items-center justify-between mb-4">
-          <div class="relative">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search transactions..."
-              class="py-2 pl-10 pr-4 border rounded-lg focus:ring-2 focus:ring-primary/50"
-            />
-            <svg
-              class="w-5 h-5 text-gray-400 absolute left-3 top-2.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <Sidebar @logout="handleLogout" />
+    
+    <!-- Main Content -->
+    <div class="lg:ml-64 transition-all duration-300">
+      <!-- Top Header -->
+      <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+            <div class="flex items-center">
+              <h1 class="text-xl font-semibold text-gray-900">
+                {{ authStore.isAdmin ? 'Transactions Management' : 'My Transactions' }}
+              </h1>
+            </div>
+            <div class="flex items-center space-x-4">
+              <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <i class="fas fa-bell"></i>
+              </button>
+            </div>
           </div>
-          <select
-            v-model="itemsPerPage"
-            class="px-3 py-2 border rounded-lg"
-          >
-            <option :value="5">5 per page</option>
-            <option :value="10">10 per page</option>
-            <option :value="20">20 per page</option>
-          </select>
         </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="text-sm font-medium text-left text-gray-600 border-b">
-                <th class="pb-4">ID</th>
-                <th class="pb-4">Customer</th>
-                <th class="pb-4">Branch</th>
-                <th class="pb-4">Service</th>
-                <th class="pb-4">Weight</th>
-                <th class="pb-4">Date</th>
-                <th class="pb-4">Amount</th>
-                <th class="pb-4">Payment Status</th>
-                <th class="pb-4">Laundry Status</th>
-                <th class="pb-4">Notes</th>
-                <th class="pb-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="!isComponentMounted || transactionStore?.loading" class="animate-pulse">
-                <td colspan="11" class="py-4 text-center">Loading...</td>
-              </tr>
-              <tr v-else-if="paginatedTransactions.length === 0" class="border-t">
-                <td colspan="11" class="py-4 text-center text-gray-500">No transactions found</td>
-              </tr>
-              <tr
-                v-for="transaction in paginatedTransactions"
-                :key="transaction.id"
-                class="transition-colors border-t hover:bg-gray-50"
-              >
-                <td class="py-4 font-medium">#{{ transaction.id }}</td>
-                <td class="py-4">
-                  <div>
-                    <div class="font-medium">{{ transaction.customer?.name || 'Unknown Customer' }}</div>
-                    <div class="text-sm text-gray-500">{{ transaction.customer?.email || '' }}</div>
-                  </div>
-                </td>
-                <td class="py-4">
-                  <div>
-                    <div class="font-medium">{{ transaction.branch_store?.name || 'Unknown Branch' }}</div>
-                    <div class="text-sm text-gray-500">{{ transaction.branch_store?.address || '' }}</div>
-                  </div>
-                </td>
-                <td class="py-4">
-                  <div v-if="transaction.service">
-                    <div class="font-medium">{{ transaction.service.name }}</div>
-                    <div class="text-sm text-gray-500">Rp {{ Number(transaction.service.price).toLocaleString() }}/{{ transaction.service.unit || 'kg' }}</div>
-                    <div class="text-xs text-gray-400">{{ transaction.service.duration }}</div>
-                  </div>
-                  <div v-else class="text-gray-400">-</div>
-                </td>
-                <td class="py-4">
-                  <div v-if="transaction.weight">
-                    <div class="font-medium">{{ transaction.weight }} kg</div>
-                    <div v-if="transaction.service && transaction.service.price" class="text-xs text-gray-500">
-                      {{ transaction.weight }} × Rp {{ Number(transaction.service.price).toLocaleString() }}
-                    </div>
-                  </div>
-                  <div v-else class="text-gray-400">-</div>
-                </td>
-                <td class="py-4">{{ formatDate(transaction.transaction_date) }}</td>
-                <td class="py-4 font-semibold">
-                  <div>
-                    <div class="text-lg">Rp {{ Number(transaction.total_amount || 0).toLocaleString() }}</div>
-                    <div v-if="transaction.voucher" class="text-xs text-green-600">
-                      Voucher: {{ transaction.voucher.name }} 
-                      <span v-if="transaction.discount_amount > 0">
-                        (-Rp {{ Number(transaction.discount_amount).toLocaleString() }})
-                      </span>
-                    </div>
-                    <div class="text-xs text-gray-500">
-                      {{ transaction.payment_method || 'N/A' }}
-                    </div>
-                  </div>
-                </td>
-                <td class="py-4">
-                  <span :class="[
-                    'px-2 py-1 text-xs rounded-full',
-                    {
-                      'bg-green-100 text-green-800': transaction.status_payment === 'paid',
-                      'bg-yellow-100 text-yellow-800': transaction.status_payment === 'unpaid',
-                      'bg-red-100 text-red-800': transaction.status_payment === 'expired'
-                    }
-                  ]">
-                    {{ transaction.status_payment }}
-                  </span>
-                </td>
-                <td class="py-4">
-                  <div class="flex items-center justify-between">
-                    <span :class="[
-                      'px-2 py-1 text-xs rounded-full',
-                      {
-                        'bg-green-100 text-green-800': transaction.status_laundry === 'completed',
-                        'bg-blue-100 text-blue-800': transaction.status_laundry === 'processing',
-                        'bg-gray-100 text-gray-800': transaction.status_laundry === 'pending',
-                        'bg-red-100 text-red-800': transaction.status_laundry === 'cancelled'
-                      }
-                    ]">
-                      {{ transaction.status_laundry }}
-                    </span>
-                    
-                    <!-- Status Update Button - Admin Only -->
-                    <button
-                      v-if="authStore.isAdmin && canUpdateLaundryStatus(transaction.status_laundry)"
-                      @click="updateLaundryStatus(transaction)"
-                      :class="[
-                        'ml-2 px-2 py-1 text-xs rounded-lg transition-colors',
-                        {
-                          'bg-blue-600 text-white hover:bg-blue-700': transaction.status_laundry === 'pending',
-                          'bg-green-600 text-white hover:bg-green-700': transaction.status_laundry === 'processing'
-                        }
-                      ]"
-                      :title="getNextStatusText(transaction.status_laundry)"
-                    >
-                      {{ getNextStatusText(transaction.status_laundry) }}
-                    </button>
-                    
-                    <!-- Status Info for Users -->
-                    <div v-else-if="authStore.isUser && canUpdateLaundryStatus(transaction.status_laundry)" class="ml-2 text-xs text-gray-500">
-                      {{ getStatusInfoForUser(transaction.status_laundry) }}
-                    </div>
-                  </div>
-                </td>
-                <td class="py-4">
-                  <span class="text-sm text-gray-600">{{ transaction.notes || '-' }}</span>
-                </td>
-                <td class="py-4">
-                  <div class="flex items-center space-x-2">
-                    <!-- Download Invoice Button -->
-                    <button
-                      v-if="transaction.status_payment === 'paid'"
-                      @click="downloadInvoice(transaction)"
-                      class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                      title="Download Invoice"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </button>
-                    <!-- Payment Link Button -->
-                    <button
-                      v-if="transaction.urlPaymentGateway"
-                      @click="openPaymentLink(transaction.urlPaymentGateway)"
-                      class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                      title="Open Payment Link"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M7 7h10v10M17 7l-10 10" />
-                      </svg>
-                    </button>
-                    <!-- Check Payment Status Button -->
-                    <button
-                      v-if="transaction.status_payment === 'unpaid' && transaction.payment_session_id"
-                      @click="checkPaymentStatus(transaction)"
-                      class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Check Payment Status"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
-                    <!-- Refresh Transaction Button -->
-                    <button
-                      @click="refreshTransaction(transaction)"
-                      class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                      title="Refresh Transaction"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
-                    <!-- Delete Button - Admin Only -->
-                    <button
-                      v-if="authStore.isAdmin"
-                      @click="confirmDelete(transaction)"
-                      class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete Transaction"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex items-center justify-between mt-4">
-          <div class="text-sm text-gray-600">
-            Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to
-            {{ Math.min(currentPage * itemsPerPage, filteredTransactions.length) }} of
-            {{ filteredTransactions.length }} entries
+      </header>
+      
+      <!-- Main Content Area -->
+      <main class="flex-1">
+        <div class="px-4 sm:px-6 lg:px-8 py-6">
+          <!-- Error state for store initialization -->
+          <div v-if="!transactionStore || !isComponentMounted" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p class="text-yellow-700">Loading component... Please wait.</p>
           </div>
-          <div class="flex space-x-2">
-            <button
-              :disabled="currentPage === 1"
-              @click="currentPage--"
-              class="px-3 py-1 border rounded-lg disabled:opacity-50"
-              :class="{ 'hover:bg-gray-100': currentPage !== 1 }"
-            >
-              Previous
-            </button>
-            <button
-              :disabled="currentPage === totalPages"
-              @click="currentPage++"
-              class="px-3 py-1 border rounded-lg disabled:opacity-50"
-              :class="{ 'hover:bg-gray-100': currentPage !== totalPages }"
-            >
-              Next
+
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-semibold">
+              {{ authStore.isAdmin ? 'Transactions Management' : 'My Transactions' }}
+            </h1>
+            <button @click="openCreateForm" class="flex items-center btn-primary" :disabled="!transactionStore || !isComponentMounted">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              New Transaction
             </button>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Transaction Form Modal -->
-    <TransactionForm
-      v-if="showForm && transactionStore && isComponentMounted"
-      :loading="transactionStore.loading"
-      @close="closeForm"
-      @submit="handleSubmit"
-    />
+          <!-- Error Message -->
+          <div v-if="transactionStore?.error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-red-700">{{ transactionStore.error }}</p>
+            <button @click="transactionStore.clearError()" class="mt-2 text-sm text-red-600 hover:text-red-800">
+              Dismiss
+            </button>
+          </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div class="w-full max-w-md p-6 bg-white rounded-lg">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium text-gray-900">Confirm Delete</h3>
-          <button @click="showDeleteConfirm = false" class="text-gray-500 hover:text-gray-700">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <!-- Role Information -->
+          <div v-if="authStore.isUser" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-center text-blue-700">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-sm">You can view your transactions and payment status. Laundry status updates are managed by admin.</span>
+            </div>
+          </div>
+
+          <!-- Transaction list table -->
+          <div class="bg-white rounded-lg shadow">
+            <div class="p-6">
+              <!-- Search and Items per page -->
+              <div class="flex items-center justify-between mb-4">
+                <div class="relative">
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Search transactions..."
+                    class="py-2 pl-10 pr-4 border rounded-lg focus:ring-2 focus:ring-primary/50"
+                  />
+                  <svg
+                    class="w-5 h-5 text-gray-400 absolute left-3 top-2.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <select
+                  v-model="itemsPerPage"
+                  class="px-3 py-2 border rounded-lg"
+                >
+                  <option :value="5">5 per page</option>
+                  <option :value="10">10 per page</option>
+                  <option :value="20">20 per page</option>
+                </select>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead>
+                    <tr class="text-sm font-medium text-left text-gray-600 border-b">
+                      <th class="pb-4">ID</th>
+                      <th class="pb-4">Customer</th>
+                      <th class="pb-4">Branch</th>
+                      <th class="pb-4">Service</th>
+                      <th class="pb-4">Weight</th>
+                      <th class="pb-4">Date</th>
+                      <th class="pb-4">Amount</th>
+                      <th class="pb-4">Payment Status</th>
+                      <th class="pb-4">Laundry Status</th>
+                      <th class="pb-4">Notes</th>
+                      <th class="pb-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-if="!isComponentMounted || transactionStore?.loading" class="animate-pulse">
+                      <td colspan="11" class="py-4 text-center">Loading...</td>
+                    </tr>
+                    <tr v-else-if="paginatedTransactions.length === 0" class="border-t">
+                      <td colspan="11" class="py-4 text-center text-gray-500">No transactions found</td>
+                    </tr>
+                    <tr
+                      v-for="transaction in paginatedTransactions"
+                      :key="transaction.id"
+                      class="transition-colors border-t hover:bg-gray-50"
+                    >
+                      <td class="py-4 font-medium">#{{ transaction.id }}</td>
+                      <td class="py-4">
+                        <div>
+                          <div class="font-medium">{{ transaction.customer?.name || 'Unknown Customer' }}</div>
+                          <div class="text-sm text-gray-500">{{ transaction.customer?.email || '' }}</div>
+                        </div>
+                      </td>
+                      <td class="py-4">
+                        <div>
+                          <div class="font-medium">{{ transaction.branch_store?.name || 'Unknown Branch' }}</div>
+                          <div class="text-sm text-gray-500">{{ transaction.branch_store?.address || '' }}</div>
+                        </div>
+                      </td>
+                      <td class="py-4">
+                        <div v-if="transaction.service">
+                          <div class="font-medium">{{ transaction.service.name }}</div>
+                          <div class="text-sm text-gray-500">Rp {{ Number(transaction.service.price).toLocaleString() }}/{{ transaction.service.unit || 'kg' }}</div>
+                          <div class="text-xs text-gray-400">{{ transaction.service.duration }}</div>
+                        </div>
+                        <div v-else class="text-gray-400">-</div>
+                      </td>
+                      <td class="py-4">
+                        <div v-if="transaction.weight">
+                          <div class="font-medium">{{ transaction.weight }} kg</div>
+                          <div v-if="transaction.service && transaction.service.price" class="text-xs text-gray-500">
+                            {{ transaction.weight }} × Rp {{ Number(transaction.service.price).toLocaleString() }}
+                          </div>
+                        </div>
+                        <div v-else class="text-gray-400">-</div>
+                      </td>
+                      <td class="py-4">{{ formatDate(transaction.transaction_date) }}</td>
+                      <td class="py-4 font-semibold">
+                        <div>
+                          <div class="text-lg">Rp {{ Number(transaction.total_amount || 0).toLocaleString() }}</div>
+                          <div v-if="transaction.voucher" class="text-xs text-green-600">
+                            Voucher: {{ transaction.voucher.name }} 
+                            <span v-if="transaction.discount_amount > 0">
+                              (-Rp {{ Number(transaction.discount_amount).toLocaleString() }})
+                            </span>
+                          </div>
+                          <div class="text-xs text-gray-500">
+                            {{ transaction.payment_method || 'N/A' }}
+                          </div>
+                        </div>
+                      </td>
+                      <td class="py-4">
+                        <span :class="[
+                          'px-2 py-1 text-xs rounded-full',
+                          {
+                            'bg-green-100 text-green-800': transaction.status_payment === 'paid',
+                            'bg-yellow-100 text-yellow-800': transaction.status_payment === 'unpaid',
+                            'bg-red-100 text-red-800': transaction.status_payment === 'expired'
+                          }
+                        ]">
+                          {{ transaction.status_payment }}
+                        </span>
+                      </td>
+                      <td class="py-4">
+                        <div class="flex items-center justify-between">
+                          <span :class="[
+                            'px-2 py-1 text-xs rounded-full',
+                            {
+                              'bg-green-100 text-green-800': transaction.status_laundry === 'completed',
+                              'bg-blue-100 text-blue-800': transaction.status_laundry === 'processing',
+                              'bg-gray-100 text-gray-800': transaction.status_laundry === 'pending',
+                              'bg-red-100 text-red-800': transaction.status_laundry === 'cancelled'
+                            }
+                          ]">
+                            {{ transaction.status_laundry }}
+                          </span>
+                          
+                          <!-- Status Update Button - Admin Only -->
+                          <button
+                            v-if="authStore.isAdmin && canUpdateLaundryStatus(transaction.status_laundry)"
+                            @click="updateLaundryStatus(transaction)"
+                            :class="[
+                              'ml-2 px-2 py-1 text-xs rounded-lg transition-colors',
+                              {
+                                'bg-blue-600 text-white hover:bg-blue-700': transaction.status_laundry === 'pending',
+                                'bg-green-600 text-white hover:bg-green-700': transaction.status_laundry === 'processing'
+                              }
+                            ]"
+                            :title="getNextStatusText(transaction.status_laundry)"
+                          >
+                            {{ getNextStatusText(transaction.status_laundry) }}
+                          </button>
+                          
+                          <!-- Status Info for Users -->
+                          <div v-else-if="authStore.isUser && canUpdateLaundryStatus(transaction.status_laundry)" class="ml-2 text-xs text-gray-500">
+                            {{ getStatusInfoForUser(transaction.status_laundry) }}
+                          </div>
+                        </div>
+                      </td>
+                      <td class="py-4">
+                        <span class="text-sm text-gray-600">{{ transaction.notes || '-' }}</span>
+                      </td>
+                      <td class="py-4">
+                        <div class="flex items-center space-x-2">
+                          <!-- Download Invoice Button -->
+                          <button
+                            v-if="transaction.status_payment === 'paid'"
+                            @click="downloadInvoice(transaction)"
+                            class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                            title="Download Invoice"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </button>
+                          <!-- Payment Link Button -->
+                          <button
+                            v-if="transaction.urlPaymentGateway"
+                            @click="openPaymentLink(transaction.urlPaymentGateway)"
+                            class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Open Payment Link"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M7 7h10v10M17 7l-10 10" />
+                            </svg>
+                          </button>
+                          <!-- Check Payment Status Button -->
+                          <button
+                            v-if="transaction.status_payment === 'unpaid' && transaction.payment_session_id"
+                            @click="checkPaymentStatus(transaction)"
+                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Check Payment Status"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                          <!-- Refresh Transaction Button -->
+                          <button
+                            @click="refreshTransaction(transaction)"
+                            class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                            title="Refresh Transaction"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                          <!-- Delete Button - Admin Only -->
+                          <button
+                            v-if="authStore.isAdmin"
+                            @click="confirmDelete(transaction)"
+                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Transaction"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+              <div class="flex items-center justify-between mt-4">
+                <div class="text-sm text-gray-600">
+                  Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to
+                  {{ Math.min(currentPage * itemsPerPage, filteredTransactions.length) }} of
+                  {{ filteredTransactions.length }} entries
+                </div>
+                <div class="flex space-x-2">
+                  <button
+                    :disabled="currentPage === 1"
+                    @click="currentPage--"
+                    class="px-3 py-1 border rounded-lg disabled:opacity-50"
+                    :class="{ 'hover:bg-gray-100': currentPage !== 1 }"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    :disabled="currentPage === totalPages"
+                    @click="currentPage++"
+                    class="px-3 py-1 border rounded-lg disabled:opacity-50"
+                    :class="{ 'hover:bg-gray-100': currentPage !== totalPages }"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction Form Modal -->
+          <TransactionForm
+            v-if="showForm && transactionStore && isComponentMounted"
+            :loading="transactionStore.loading"
+            @close="closeForm"
+            @submit="handleSubmit"
+          />
+
+          <!-- Delete Confirmation Modal -->
+          <div v-if="showDeleteConfirm" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div class="w-full max-w-md p-6 bg-white rounded-lg">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Confirm Delete</h3>
+                <button @click="showDeleteConfirm = false" class="text-gray-500 hover:text-gray-700">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p class="text-gray-700 mb-6">
+                Are you sure you want to delete transaction #{{ transactionToDelete?.id }}? This action cannot be undone.
+              </p>
+              <div class="flex justify-end space-x-3">
+                <button
+                  @click="showDeleteConfirm = false"
+                  class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  @click="deleteTransaction"
+                  class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="text-gray-700 mb-6">
-          Are you sure you want to delete transaction #{{ transactionToDelete?.id }}? This action cannot be undone.
-        </p>
-        <div class="flex justify-end space-x-3">
-          <button
-            @click="showDeleteConfirm = false"
-            class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            @click="deleteTransaction"
-            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
+      </main>
     </div>
   </div>
 </template>
+
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useTransactionStore } from '../stores/transactionStore'
@@ -338,11 +367,13 @@ import { useVoucherStore } from '../stores/voucherStore'
 import { useAuthStore } from '../stores/authStore'
 import api from '../services/api'
 import TransactionForm from '../components/TransactionForm.vue'
+import Sidebar from '../components/Sidebar.vue'
 
 export default {
   name: 'TransactionsPage',
   components: {
-    TransactionForm
+    TransactionForm,
+    Sidebar
   },
   setup() {
     // Initialize stores with error handling
@@ -785,6 +816,15 @@ export default {
       isComponentMounted.value = false
     })
 
+    const handleLogout = async () => {
+      try {
+        await authStore.logout()
+        router.push('/')
+      } catch (error) {
+        console.error('Logout error:', error)
+      }
+    }
+
     return {
       authStore,
       transactionStore,
@@ -815,7 +855,8 @@ export default {
       getNextStatusText,
       getStatusInfoForUser,
       updateLaundryStatus,
-      downloadInvoice
+      downloadInvoice,
+      handleLogout
     }
   }
 }

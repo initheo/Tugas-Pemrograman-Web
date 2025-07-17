@@ -13,7 +13,7 @@ const authStore = useAuthStore();
 const isMobileMenuOpen = ref(false);
 const showUserMenu = ref(false);
 
-// Add navigation items array for public pages
+// Navigation items for public pages (landing page)
 const publicNavItems = [
   { path: '/', label: 'Beranda' },
   { path: '/about', label: 'Tentang Kami' },
@@ -23,36 +23,11 @@ const publicNavItems = [
   { path: '/contact', label: 'Kontak' }
 ];
 
-// Navigation items for authenticated users
-const adminNavItems = [
-  { path: '/dashboard', label: 'Dashboard' },
-  { path: '/customers', label: 'Customers' },
-  { path: '/branches', label: 'Branches' },
-  { path: '/services-management', label: 'Services' },
-  { path: '/vouchers', label: 'Vouchers' },
-  { path: '/transactions', label: 'Transactions' },
-  { path: '/settings', label: 'Settings' }
-];
-
-const userNavItems = [
-  { path: '/dashboard', label: 'Dashboard' },
-  { path: '/services-management', label: 'Services' },
-  { path: '/transactions', label: 'Transaksi Saya' },
-  { path: '/vouchers', label: 'Voucher' }
-];
-
-// Computed property to get current nav items based on auth status and role
+// Computed property to get current nav items - only show public nav items
+// Dashboard navigation will be handled by sidebar components
 const navItems = computed(() => {
-  if (!authStore.isAuthenticated) {
-    return publicNavItems;
-  }
-  
-  if (authService.isAdmin()) {
-    return adminNavItems;
-  } else if (authService.isUser()) {
-    return userNavItems;
-  }
-  
+  // Always show public navigation items in header
+  // Dashboard pages will use sidebar navigation instead
   return publicNavItems;
 });
 

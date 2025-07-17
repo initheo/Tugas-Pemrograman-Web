@@ -1,28 +1,52 @@
 <template>
-  <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold">Customers</h1>
-      <button
-        @click="openModal()"
-        class="flex items-center gap-2 px-4 py-2 mb-4 text-white transition-all duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="w-6 h-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          />
-        </svg>
-        Add New Customer
-      </button>
-    </div>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <Sidebar @logout="handleLogout" />
+    
+    <!-- Main Content -->
+    <div class="lg:ml-64 transition-all duration-300">
+      <!-- Top Header -->
+      <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+            <div class="flex items-center">
+              <h1 class="text-xl font-semibold text-gray-900">Customers</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+              <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <i class="fas fa-bell"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Main Content Area -->
+      <main class="flex-1">
+        <div class="px-4 sm:px-6 lg:px-8 py-6">
+          <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-semibold">Customers</h1>
+            <button
+              @click="openModal()"
+              class="flex items-center gap-2 px-4 py-2 mb-4 text-white transition-all duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Add New Customer
+            </button>
+          </div>
 
     <div class="bg-white rounded-lg shadow">
       <div class="p-6">
@@ -356,16 +380,27 @@
     </div>
   </div>
 </div>
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/authStore'
 import { useCustomerStore } from '../stores/customerStore'
+import Sidebar from '../components/Sidebar.vue'
 
 export default {
   name: 'CustomersPage',
+  components: {
+    Sidebar
+  },
   setup() {
+    const router = useRouter()
+    const authStore = useAuthStore()
     const customerStore = useCustomerStore()
     
     // Reactive data
@@ -534,6 +569,15 @@ export default {
       }
     }
 
+    const handleLogout = async () => {
+      try {
+        await authStore.logout()
+        router.push('/')
+      } catch (error) {
+        console.error('Logout error:', error)
+      }
+    }
+
     const loadCustomers = async () => {
       try {
         console.log('Loading customers...')
@@ -598,7 +642,8 @@ export default {
       handleSubmit,
       handleDelete,
       toggleSort,
-      loadCustomers
+      loadCustomers,
+      handleLogout
     }
   }
 }

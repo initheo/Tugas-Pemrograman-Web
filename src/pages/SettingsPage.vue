@@ -1,19 +1,43 @@
 <template>
-  <div class="p-6">
-    <div class="max-w-4xl mx-auto">
-      <!-- Header -->
-      <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Settings</h1>
-        <p class="mt-1 text-sm text-gray-600">Manage your account settings and security</p>
-      </div>
-
-      <!-- Security Settings Card -->
-      <div class="bg-white shadow rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Security Settings</h2>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <Sidebar @logout="handleLogout" />
+    
+    <!-- Main Content -->
+    <div class="lg:ml-64 transition-all duration-300">
+      <!-- Top Header -->
+      <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+            <div class="flex items-center">
+              <h1 class="text-xl font-semibold text-gray-900">Settings</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+              <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <i class="fas fa-bell"></i>
+              </button>
+            </div>
+          </div>
         </div>
-        
-        <div class="p-6">
+      </header>
+      
+      <!-- Main Content Area -->
+      <main class="flex-1">
+        <div class="px-4 sm:px-6 lg:px-8 py-6">
+          <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="mb-6">
+              <h1 class="text-2xl font-semibold text-gray-900">Settings</h1>
+              <p class="mt-1 text-sm text-gray-600">Manage your account settings and security</p>
+            </div>
+
+            <!-- Security Settings Card -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">Security Settings</h2>
+              </div>
+              
+              <div class="p-6">
           <!-- Change Password Form -->
           <div class="max-w-md">
             <h3 class="text-md font-medium text-gray-900 mb-4">Change Password</h3>
@@ -113,23 +137,32 @@
               </div>
             </form>
           </div>
+              </div>
+            </div>
+
+            <!-- Additional Settings Card -->
+            
+
+          </div>
         </div>
-      </div>
-
-      <!-- Additional Settings Card -->
-       
-
+      </main>
     </div>
   </div>
 </template>
 
 <script>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import Sidebar from '../components/Sidebar.vue'
 
 export default {
   name: 'SettingsPage',
+  components: {
+    Sidebar
+  },
   setup() {
+    const router = useRouter()
     const authStore = useAuthStore()
     
     // Reactive data
@@ -269,6 +302,15 @@ export default {
       }
     }
 
+    const handleLogout = async () => {
+      try {
+        await authStore.logout()
+        router.push('/')
+      } catch (error) {
+        console.error('Logout error:', error)
+      }
+    }
+
     return {
       authStore,
       form,
@@ -282,7 +324,8 @@ export default {
       passwordStrengthTextClass,
       passwordStrengthText,
       resetForm,
-      changePassword
+      changePassword,
+      handleLogout
     }
   }
 }
