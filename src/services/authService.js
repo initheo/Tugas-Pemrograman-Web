@@ -127,5 +127,40 @@ export const authService = {
       
       throw new Error(error.response?.data?.message || 'Failed to change password')
     }
+  },
+
+  // Register user
+  async register(registrationData) {
+    try {
+      console.log('AuthService: Sending registration request to backend')
+      const response = await api.post('/register', registrationData)
+      
+      console.log('AuthService: Registration response received:', response.data)
+      
+      // Menyesuaikan dengan struktur response Laravel Sanctum
+      if (response.data['access-token']) {
+        localStorage.setItem('auth_token', response.data['access-token'])
+        localStorage.setItem('user', JSON.stringify(response.data.data.user))
+        console.log('AuthService: Token and user data stored in localStorage after registration')
+        
+        return {
+          token: response.data['access-token'],
+          user: response.data.data.user,
+          customer: response.data.data.customer
+        }
+      }
+      
+      return response.data
+    } catch (error) {
+      console.error('AuthService: Registration failed:', error.response?.data || error.message)
+      
+      // Handle validation errors specifically
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        const validationErrors = error.response.data.errors
+        throw new Error(Object.values(validationErrors).flat().join(', '))
+      }
+      
+      throw new Error(error.response?.data?.message || 'Registration failed')
+    }
   }
 }

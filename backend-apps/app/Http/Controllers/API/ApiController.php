@@ -79,7 +79,7 @@ class ApiController extends Controller
       $customer->user_id = $user->id;
       $customer->name = $request->name;
       $customer->email = $request->email;
-      $customer->phone = $request->phone;
+      $customer->phone_number = $request->phone;
       $customer->address = $request->address;
       $customer->save();
 
@@ -87,7 +87,18 @@ class ApiController extends Controller
       $token = $user->createToken('auth:sanctum')->plainTextToken;
 
       // Log successful registration
-      Log::info('User registered successfully: ' . $user->id);
+      Log::info(
+        [
+        'message' => 'Registration successful',
+        'data' => [
+          'user' => $user,
+          'customer' => $customer
+        ],
+        'access-token' => $token,
+        'token-type' => 'Bearer',
+        'role' => $user->role
+      ]
+      );
 
       // Return success response with user data and token
       return response()->json([

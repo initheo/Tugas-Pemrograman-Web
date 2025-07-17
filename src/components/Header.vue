@@ -108,7 +108,10 @@ onUnmounted(() => {
             <template v-if="!authStore.isAuthenticated">
               <RouterLink to="/login"
                 className="px-4 py-2 text-secondary-600 hover:text-primary-600 font-medium rounded-md hover:bg-primary-50 transition-all duration-300"
-                >Login</RouterLink> 
+                >Login</RouterLink>
+              <RouterLink to="/register"
+                className="bg-primary-600 text-white py-2 px-4 rounded-md font-medium hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-300"
+                >Sign Up</RouterLink>
             </template>
 
             <!-- Show user profile for authenticated users -->

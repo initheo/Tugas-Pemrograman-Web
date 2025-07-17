@@ -122,6 +122,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             'best_customers' => $bestCustomers,
             'best_branches' => $bestBranches,
         ]);
+
+        
     })->name('dashboard.index');
 });
 

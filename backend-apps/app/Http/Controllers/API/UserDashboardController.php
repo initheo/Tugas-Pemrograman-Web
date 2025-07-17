@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Models\Transaction;
 use App\Models\Voucher;
 use App\Models\Customer;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class UserDashboardController extends Controller
 {
@@ -18,72 +19,78 @@ class UserDashboardController extends Controller
     public function getDashboardStats(Request $request)
     {
         $user = $request->user();
-        
-        // Get customer associated with this user
+ 
+        // Get or create customer associated with this user
         $customer = Customer::where('user_id', $user->id)->first();
-        
+
         if (!$customer) {
-            return response()->json([
-                'message' => 'No customer profile found for this user',
-                'data' => [
-                    'stats' => [
-                        'totalTransactions' => 0,
-                        'totalSpent' => 0,
-                        'totalSavings' => 0,
-                        'monthlySpending' => 0
-                    ],
-                    'recentTransactions' => [],
-                    'spendingByMonth' => []
-                ]
+            // Auto-create customer profile with basic info from user
+            $customer = Customer::create([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone_number' => null,
+                'address' => null,
+                'city' => null,
+                'postal_code' => null
             ]);
+
+            Log::info('Created new customer profile', ['customer_id' => $customer->id]);
         }
-        
+
         // Get user's transactions via customer relationship
         $userTransactions = Transaction::where('customer_id', $customer->id)
-                                    ->with(['customer', 'branchStore', 'voucher'])
-                                    ->get();
+            ->with(['customer', 'branchStore', 'voucher'])
+            ->get();
 
         // Calculate statistics
         $totalTransactions = $userTransactions->count();
         $totalSpent = $userTransactions->sum('total_amount');
         $totalSavings = $userTransactions->sum('discount_amount');
-        
+
         // Monthly spending
         $monthlySpending = Transaction::where('customer_id', $customer->id)
-                                    ->whereMonth('transaction_date', now()->month)
-                                    ->whereYear('transaction_date', now()->year)
-                                    ->sum('total_amount');
+            ->whereMonth('transaction_date', now()->month)
+            ->whereYear('transaction_date', now()->year)
+            ->sum('total_amount');
 
         // Recent transactions
         $recentTransactions = Transaction::where('customer_id', $customer->id)
-                                       ->with(['customer', 'branchStore', 'voucher'])
-                                       ->orderBy('transaction_date', 'desc')
-                                       ->limit(5)
-                                       ->get();
+            ->with(['customer', 'branchStore', 'voucher'])
+            ->orderBy('transaction_date', 'desc')
+            ->limit(5)
+            ->get();
 
         // Spending by month for chart (last 6 months)
         $spendingByMonth = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
             $amount = Transaction::where('customer_id', $customer->id)
-                               ->whereMonth('transaction_date', $date->month)
-                               ->whereYear('transaction_date', $date->year)
-                               ->sum('total_amount');
-            
+                ->whereMonth('transaction_date', $date->month)
+                ->whereYear('transaction_date', $date->year)
+                ->sum('total_amount');
+
             $spendingByMonth[] = [
                 'month' => $date->format('M Y'),
-                'amount' => $amount
+                'amount' => (float) $amount // Ensure numeric type
             ];
         }
 
         return response()->json([
             'message' => 'User dashboard statistics',
             'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role
+                ],
+                'customer' => $customer,
                 'stats' => [
                     'totalTransactions' => $totalTransactions,
-                    'totalSpent' => $totalSpent,
-                    'totalSavings' => $totalSavings,
-                    'monthlySpending' => $monthlySpending
+                    'totalSpent' => (float) $totalSpent,
+                    'totalSavings' => (float) $totalSavings,
+                    'monthlySpending' => (float) $monthlySpending
                 ],
                 'recentTransactions' => $recentTransactions,
                 'spendingByMonth' => $spendingByMonth
@@ -97,21 +104,27 @@ class UserDashboardController extends Controller
     public function getUserTransactions(Request $request)
     {
         $user = $request->user();
-        
-        // Get customer associated with this user
+
+        // Get or create customer associated with this user
         $customer = Customer::where('user_id', $user->id)->first();
-        
+
         if (!$customer) {
-            return response()->json([
-                'message' => 'No customer profile found for this user',
-                'data' => []
+            // Auto-create customer profile with basic info from user
+            $customer = Customer::create([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone_number' => null,
+                'address' => null,
+                'city' => null,
+                'postal_code' => null
             ]);
         }
-        
+
         $transactions = Transaction::where('customer_id', $customer->id)
-                                 ->with(['customer', 'branchStore', 'voucher'])
-                                 ->orderBy('transaction_date', 'desc')
-                                 ->get();
+            ->with(['customer', 'branchStore', 'voucher'])
+            ->orderBy('transaction_date', 'desc')
+            ->get();
 
         return response()->json([
             'message' => 'User transactions',
@@ -125,8 +138,8 @@ class UserDashboardController extends Controller
     public function getAvailableVouchers(Request $request)
     {
         $vouchers = Voucher::where('valid_until', '>', now())
-                          ->where('valid_from', '<=', now())
-                          ->get();
+            ->where('valid_from', '<=', now())
+            ->get();
 
         return response()->json([
             'message' => 'Available vouchers',
@@ -160,10 +173,23 @@ class UserDashboardController extends Controller
     {
         try {
             $user = $request->user();
-            
-            // Get customer data linked to this user
+
+            // Get or create customer data linked to this user
             $customer = Customer::where('user_id', $user->id)->first();
-            
+
+            if (!$customer) {
+                // Auto-create customer profile with basic info from user
+                $customer = Customer::create([
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone_number' => null,
+                    'address' => null,
+                    'city' => null,
+                    'postal_code' => null
+                ]);
+            }
+
             $profileData = [
                 'user' => [
                     'id' => $user->id,
@@ -178,7 +204,6 @@ class UserDashboardController extends Controller
                 'message' => 'User profile retrieved successfully',
                 'data' => $profileData
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error retrieving user profile: ' . $e->getMessage()

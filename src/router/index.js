@@ -76,6 +76,12 @@ const router = createRouter({
       meta: { requiresGuest: true }
     },
     {
+      path: '/register',
+      name: 'Register',
+      component: RegisterView,
+      meta: { requiresGuest: true }
+    },
+    {
       path: '/dashboard',
       name: 'Dashboard',
       component: DashboardPage,
